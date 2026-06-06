@@ -18,6 +18,7 @@ def test_required_hackathon_deliverables_exist():
         "requirements.txt",
         "sample_alert.json",
         "scripts/capture_demo.py",
+        "scripts/create_demo_video.py",
         "scripts/cloud_run_preflight.py",
         "app/adk_adapter.py",
     ]
@@ -54,6 +55,15 @@ def test_demo_recording_script_covers_hosted_flow():
     assert "POST" in script
     assert "agent_trace.json" in script
     assert "python -m pytest -q" in script
+
+
+def test_demo_video_generator_is_available_and_ignored():
+    generator = ROOT.joinpath("scripts/create_demo_video.py").read_text(encoding="utf-8")
+    gitignore = ROOT.joinpath(".gitignore").read_text(encoding="utf-8")
+
+    assert "zerotouch_sre_demo.mp4" in generator
+    assert "ffmpeg" in generator
+    assert "demo_assets/" in gitignore
 
 
 def test_cloud_run_preflight_does_not_expose_secret_values():
