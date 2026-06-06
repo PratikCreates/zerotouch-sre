@@ -12,41 +12,41 @@ The hosted project is the best first stop:
 
 [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 
-It opens a full interactive website with an editable incident workbench. Click **Run sample incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, and raw JSON.
+It opens a full interactive website with an editable incident workbench. Click **Review sample incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, and raw response.
 
 ![Hosted health check](assets/screenshots/01-health-check.png)
 
-## Live Demo
+## Live Service
 
 - Hosted backend: [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 - Health check: [https://zerotouch-sre-971465910048.us-central1.run.app/health](https://zerotouch-sre-971465910048.us-central1.run.app/health)
-- Browser demo: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
-- Raw demo JSON: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
+- Guided incident review: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
+- Raw sample response: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
 Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, key innovation cards, and direct links to the API docs and source.
 
-## Visual Walkthrough
+## Product Walkthrough
 
 The hosted URL opens as a product surface, not a blank API root.
 
-![Hosted showcase](assets/screenshots/04-hosted-showcase.png)
+![Hosted incident workbench](assets/screenshots/04-hosted-showcase.png)
 
-The visual demo translates the raw agent response into a non-technical incident story.
+The guided incident review translates the raw agent response into an operator-readable incident summary.
 
-![Visual demo result](assets/screenshots/05-visual-demo-result.png)
+![Guided incident review](assets/screenshots/05-visual-demo-result.png)
 
 ## The One-Minute Tour
 
 1. Open the hosted project URL.
-2. Click **Run sample incident** in the embedded workbench.
+2. Click **Review sample incident** in the embedded workbench.
 3. Watch the page populate with:
    - incident status
    - telemetry source and mode
    - root-cause diagnosis
    - simulated mitigation actions
    - billing guardrail snapshot
-   - raw response JSON
+   - raw response
 4. Edit the alert payload and click **Run edited alert** to prove the backend is live.
 5. Open `/docs` for a branded Swagger UI with examples and response schemas.
 
@@ -63,16 +63,16 @@ The visual demo translates the raw agent response into a non-technical incident 
 
 ![Alert response](assets/screenshots/02-alert-result.png)
 
-## Key Innovations
+## Operational Capabilities
 
-| Area | What ZeroTouch SRE Shows |
+| Area | What ZeroTouch SRE Provides |
 | --- | --- |
 | Action over chat | The agent runs a complete operational loop instead of only answering a question. |
 | Telemetry-first reasoning | Dynatrace evidence is attempted before root-cause reasoning and mitigation planning. |
 | Safe autonomy | Mitigations are policy-gated and simulated; destructive writes are blocked. |
 | Auditability | Each run produces a post-mortem, runbook, mitigation audit trail, and agent trace. |
 | Cost awareness | Simulated model usage is tracked against INR budget guardrails. |
-| Hosted testing | The Cloud Run URL is a usable product surface, not just a raw API endpoint. |
+| Hosted operations UI | The Cloud Run URL is a usable product surface, not just a raw API endpoint. |
 
 ## Why It Matters
 
@@ -141,7 +141,7 @@ Example response:
 }
 ```
 
-### Browser Demo
+### Guided Incident Review
 
 Open:
 
@@ -149,7 +149,7 @@ Open:
 https://zerotouch-sre-971465910048.us-central1.run.app/demo
 ```
 
-This runs the included checkout incident through the same engine used by `POST /alert`, then renders the result as a plain-English visual walkthrough.
+This runs the included checkout incident through the same engine used by `POST /alert`, then renders the result as an operator-readable incident review.
 
 For raw JSON output:
 
@@ -229,11 +229,11 @@ Each successful run writes review artifacts inside the running service environme
 - agent trace JSON
 - mitigation audit log
 
-The public API returns paths to those artifacts. The hosted page also shows the raw response so the generated outputs are easy to inspect during a demo.
+The public API returns paths to those artifacts. The hosted page also shows the raw response so the generated outputs are easy to inspect during incident review.
 
 ## Design Notes
 
-The project is intentionally machine-to-machine at the backend layer, but the hosted root URL is a real product surface for judging and testing. It gives reviewers a fast way to understand the workflow, run the sample incident, edit the payload, and see the response without needing local setup.
+The project is intentionally machine-to-machine at the backend layer, but the hosted root URL is a real product surface for operators and technical evaluators. It gives teams a fast way to understand the workflow, run the sample incident, edit the payload, and see the response without needing local setup.
 
 The UI emphasizes:
 

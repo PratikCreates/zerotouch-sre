@@ -10,7 +10,7 @@ Open the landing page:
 https://zerotouch-sre-971465910048.us-central1.run.app/
 ```
 
-The page links to the browser demo, API docs, health check, and source repository.
+The page links to the guided incident review, API docs, health check, and source repository.
 
 Run:
 
@@ -33,7 +33,7 @@ This proves the Cloud Run service is reachable and the FastAPI app has started c
 
 ## 2. Send A Production Alert
 
-Fast browser path:
+Guided incident review:
 
 ```text
 https://zerotouch-sre-971465910048.us-central1.run.app/demo

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -31,8 +31,8 @@ app = FastAPI(
     },
     openapi_tags=[
         {
-            "name": "Showcase",
-            "description": "Browser-facing routes for quickly understanding and trying the hosted project.",
+            "name": "Product",
+            "description": "Browser-facing routes for understanding, operating, and testing ZeroTouch SRE.",
         },
         {
             "name": "Incident Agent",
@@ -46,6 +46,11 @@ app = FastAPI(
 )
 
 app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> FileResponse:
+    return FileResponse(ROOT / "assets" / "zerotouch_sre_logo.png", media_type="image/png")
 
 
 class AlertPayload(BaseModel):
@@ -242,11 +247,11 @@ async def api_docs() -> str:
     <img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" />
     <div>
       <h1>ZeroTouch SRE API</h1>
-      <p>Use <strong>GET /demo</strong> for the visual judge path, <strong>GET /demo.json</strong> for raw output, or <strong>POST /alert</strong> with a custom incident payload.</p>
+      <p>Use <strong>GET /demo</strong> for a guided incident review, <strong>GET /demo.json</strong> for raw output, or <strong>POST /alert</strong> with a custom incident payload.</p>
     </div>
     <nav class="docs-actions">
       <a href="/">Open website</a>
-      <a class="secondary" href="/demo">Run demo</a>
+      <a class="secondary" href="/demo">Review sample incident</a>
       <a class="secondary" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
     </nav>
   </header>
@@ -270,11 +275,11 @@ async def api_docs() -> str:
 @app.get(
     "/",
     response_class=HTMLResponse,
-    tags=["Showcase"],
-    summary="Open the interactive hosted showcase",
+    tags=["Product"],
+    summary="Open the interactive incident workbench",
     description=(
-        "Returns the judge-facing project website with an embedded incident workbench. "
-        "Use this as the primary hosted project URL."
+        "Returns the hosted product website with an embedded incident workbench. "
+        "Use this as the primary project URL."
     ),
 )
 async def landing() -> str:
@@ -408,7 +413,7 @@ async def landing() -> str:
     <nav>
       <div class="brand"><img class="mark" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="navlinks">
-        <a href="/demo">Run Demo</a>
+        <a href="/demo">Sample Incident</a>
         <a href="/docs">API Docs</a>
         <a href="/health">Health</a>
         <a href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
@@ -426,7 +431,7 @@ async def landing() -> str:
           runbook, trace, and budget snapshot.
         </p>
         <div class="actions">
-          <a class="button primary" href="/demo">Run sample incident</a>
+          <a class="button primary" href="/demo">Review sample incident</a>
           <a class="button secondary" href="/docs">Try custom alert</a>
           <a class="button secondary" href="https://github.com/PratikCreates/zerotouch-sre">Review source</a>
         </div>
@@ -465,8 +470,8 @@ async def landing() -> str:
 
     <section class="try">
       <div class="card">
-        <h2>Fast judge path</h2>
-        <p>Use the workbench below. It runs the included checkout incident through the full agent loop and renders the result directly on this page.</p>
+        <h2>Guided incident review</h2>
+        <p>Use the workbench below to run the included checkout incident through the full agent loop and inspect the operational outcome directly on this page.</p>
       </div>
       <div class="card">
         <h2>Custom alert path</h2>
@@ -490,7 +495,7 @@ async def landing() -> str:
   }
 }</textarea>
         <div class="buttonbar">
-          <button class="button primary" id="runDemo" type="button">Run sample incident</button>
+          <button class="button primary" id="runDemo" type="button">Review sample incident</button>
           <button class="button secondary" id="runCustom" type="button">Run edited alert</button>
           <button class="button secondary" id="resetPayload" type="button">Reset payload</button>
         </div>
@@ -510,7 +515,7 @@ async def landing() -> str:
         <div style="padding: 0 16px 16px;">
           <div class="pill">
             <small>Root cause</small>
-            <strong id="resultCause">Run the demo to generate a diagnosis.</strong>
+            <strong id="resultCause">Run the sample incident to generate a diagnosis.</strong>
           </div>
           <ul class="actions-list" id="resultActions"></ul>
         </div>
@@ -519,11 +524,11 @@ async def landing() -> str:
     </section>
 
     <div class="section-head">
-      <h2>Key innovations</h2>
-      <p>ZeroTouch SRE is designed as an operational agent, not a chatbot wrapper. The demo is built to show execution quality, safety, and real-world usefulness in the first minute.</p>
+      <h2>Operational capabilities</h2>
+      <p>ZeroTouch SRE is designed as an operational agent, not a chatbot wrapper. It emphasizes clear execution, policy control, auditability, and real-world usefulness from the first run.</p>
     </div>
 
-    <section class="innovation-grid" aria-label="Key innovations">
+    <section class="innovation-grid" aria-label="Operational capabilities">
       <div class="card">
         <span class="badge">Action over chat</span>
         <h3>Webhook-to-artifact loop</h3>
@@ -551,12 +556,12 @@ async def landing() -> str:
       </div>
       <div class="card">
         <span class="badge">Cloud native</span>
-        <h3>Hosted for testing</h3>
-        <p>The project is containerized and deployed on Cloud Run with secret-backed provider configuration and public testing routes.</p>
+        <h3>Hosted operations API</h3>
+        <p>The service is containerized and deployed on Cloud Run with secret-backed provider configuration and public operational routes.</p>
       </div>
     </section>
 
-    <section class="grid" aria-label="Why it stands out">
+    <section class="grid" aria-label="Platform summary">
       <div class="card"><h3>Google Cloud ready</h3><p>Containerized FastAPI service deployed on Cloud Run with secret-backed provider configuration.</p></div>
       <div class="card"><h3>Partner-aware</h3><p>Dynatrace evidence is attempted first; fallback mode is explicit and auditable in the response.</p></div>
       <div class="card"><h3>Operator control</h3><p>Production-affecting changes are not performed blindly. The service simulates and records policy-approved actions.</p></div>
@@ -665,12 +670,12 @@ async def health() -> dict[str, str]:
 
 @app.get(
     "/demo",
-    tags=["Showcase", "Incident Agent"],
+    tags=["Product", "Incident Agent"],
     response_class=HTMLResponse,
-    summary="Open the visual sample incident demo",
+    summary="Open the guided sample incident review",
     description=(
         "Runs the sample checkout alert through the same engine used by POST /alert, "
-        "then renders the result as a non-technical walkthrough page."
+        "then renders the result as a guided incident review page."
     ),
 )
 async def demo() -> HTMLResponse:
@@ -740,7 +745,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZeroTouch SRE Demo Result</title>
+  <title>ZeroTouch SRE Incident Review</title>
   <link rel="icon" href="/assets/zerotouch_sre_logo.png" />
   <style>
     :root {{ color-scheme: dark; --bg:#081014; --panel:#101a21; --line:#2d4651; --ink:#f4fbfb; --muted:#b7c9cf; --mint:#b8ffd7; --cyan:#83e7ff; --amber:#ffd166; --red:#ff8f8f; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
@@ -754,8 +759,8 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
     a {{ color:inherit; }}
     .button {{ text-decoration:none; border:1px solid var(--line); background:#17242c; padding:10px 13px; border-radius:8px; font-weight:850; }}
     .button.primary {{ background:var(--mint); color:#06120b; border-color:var(--mint); }}
-    .demo-note {{ display:flex; gap:10px; align-items:center; border:1px solid #31525f; background:#0c1a20; border-radius:10px; padding:12px 14px; margin-bottom:18px; color:var(--muted); }}
-    .demo-note strong {{ color:var(--mint); }}
+    .review-note {{ display:flex; gap:10px; align-items:center; border:1px solid #31525f; background:#0c1a20; border-radius:10px; padding:12px 14px; margin-bottom:18px; color:var(--muted); }}
+    .review-note strong {{ color:var(--mint); }}
     .pill {{ display:inline-flex; align-items:center; gap:8px; border:1px solid #31525f; background:#09151a; color:var(--cyan); border-radius:999px; padding:7px 10px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }}
     .hero {{ display:grid; grid-template-columns: .9fr 1.1fr; gap:22px; align-items:stretch; }}
     .logo {{ width:100%; border:1px solid #31525f; border-radius:14px; box-shadow:0 24px 80px rgba(0,0,0,.28); }}
@@ -804,23 +809,23 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
       <div class="brand"><img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="links">
         <a class="button primary" href="/">Open workbench</a>
-        <a class="button" href="/demo.json">Technical JSON</a>
+        <a class="button" href="/demo.json">Raw response</a>
         <a class="button" href="/docs">API docs</a>
         <a class="button" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
       </div>
     </nav>
 
-    <div class="demo-note">
-      <span class="pill">Visual demo</span>
-      <span><strong>Best judge path:</strong> this page runs the sample alert and explains the outcome without requiring API knowledge. The JSON endpoint is separate at <a href="/demo.json">/demo.json</a>.</span>
+    <div class="review-note">
+      <span class="pill">Incident review</span>
+      <span><strong>Sample checkout outage:</strong> this page runs the alert through ZeroTouch SRE and summarizes the result for operators. The raw machine-readable response is separate at <a href="/demo.json">/demo.json</a>.</span>
     </div>
 
     <section class="hero">
       <img class="logo" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE autonomous incident response" />
       <div class="panel">
         <div class="eyebrow">Sample incident completed</div>
-        <h1>The agent stabilized the checkout incident.</h1>
-        <p>A single alert comes in. ZeroTouch checks operational context, builds a root-cause hypothesis, chooses policy-safe actions, and leaves a review trail for the human owner.</p>
+        <h1>Checkout incident stabilized.</h1>
+        <p>A single alert comes in. ZeroTouch SRE checks operational context, builds a root-cause hypothesis, chooses policy-safe actions, and leaves a review trail for the human owner.</p>
         <div class="status">
           <div class="metric"><small>Status</small><strong>{status}</strong></div>
           <div class="metric"><small>Incident</small><strong>{incident_id}</strong></div>
@@ -831,7 +836,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
     </section>
 
     <section class="panel" style="margin-top:16px;">
-      <h2>Plain-English diagnosis</h2>
+      <h2>Operational diagnosis</h2>
       <p class="diagnosis">{root_cause}</p>
       <div class="before-after">
         <div class="bad"><small>Before</small><strong>Checkout was failing under CPU pressure, with rising HTTP 500s and slow payment retries.</strong></div>
@@ -857,18 +862,18 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
         <div class="metric"><small>Telemetry source</small><strong>{telemetry_source}</strong></div>
         <p>{fallback_note}</p>
         <div class="metric"><small>Total model tokens</small><strong>{tokens}</strong></div>
-        <p>Actions are simulated and policy-gated. No destructive production write is performed by the demo.</p>
+        <p>Actions are simulated and policy-gated. No destructive production write is performed in this hosted environment.</p>
       </div>
     </section>
 
     <section class="panel" style="margin-top:16px;">
-      <h2>How to judge it in 60 seconds</h2>
+      <h2>How to review the incident</h2>
       <div class="flow" style="margin-top:0;">
-        <div class="step"><strong>1. Read the diagnosis</strong><span>It should connect symptoms to a plausible operational cause.</span></div>
-        <div class="step"><strong>2. Inspect actions</strong><span>Every mitigation explains why it is safe.</span></div>
-        <div class="step"><strong>3. Open workbench</strong><span>Change the alert payload and run it from the browser.</span></div>
-        <div class="step"><strong>4. Check docs</strong><span>The API can be tested directly from Swagger.</span></div>
-        <div class="step"><strong>5. Review source</strong><span>The public repo contains deployable code and screenshots.</span></div>
+        <div class="step"><strong>1. Confirm impact</strong><span>Check the incident status, affected service, and cost snapshot.</span></div>
+        <div class="step"><strong>2. Read diagnosis</strong><span>Review how the symptoms map to the likely operational cause.</span></div>
+        <div class="step"><strong>3. Inspect actions</strong><span>Verify that every mitigation has a policy-safe reason.</span></div>
+        <div class="step"><strong>4. Open workbench</strong><span>Adjust the alert payload and rerun the workflow from the browser.</span></div>
+        <div class="step"><strong>5. Keep artifacts</strong><span>Use the post-mortem, runbook, and trace paths for follow-up.</span></div>
       </div>
     </section>
 
