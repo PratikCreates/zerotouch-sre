@@ -109,6 +109,7 @@ async def landing() -> str:
     .token { color: var(--cyan); }
     section { margin-top: 28px; }
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .innovation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     .card { border: 1px solid var(--line); background: rgba(16,26,33,.78); border-radius: 10px; padding: 18px; }
     .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -.02em; }
     .card p, .card li { color: var(--muted); line-height: 1.55; }
@@ -118,17 +119,46 @@ async def landing() -> str:
     .step strong { display: block; color: var(--mint); margin-bottom: 8px; }
     .step span { color: var(--muted); line-height: 1.45; font-size: 14px; }
     .try { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .workbench { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 16px; align-items: stretch; }
+    textarea {
+      width: 100%;
+      min-height: 252px;
+      resize: vertical;
+      border: 1px solid #31525f;
+      background: #071016;
+      color: #e6fff0;
+      border-radius: 10px;
+      padding: 14px;
+      font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(131,231,255,.12); }
+    .buttonbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    button { cursor: pointer; font: inherit; }
+    .result-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+    .pill { border: 1px solid #31525f; background: #0b151b; border-radius: 10px; padding: 12px; }
+    .pill small { display: block; color: #8fb0ba; text-transform: uppercase; letter-spacing: .09em; font-weight: 900; font-size: 10px; margin-bottom: 6px; }
+    .pill strong { color: var(--mint); font-size: 15px; word-break: break-word; }
+    .statusline { color: var(--amber); font-weight: 900; margin: 12px 0 0; min-height: 22px; }
+    .actions-list { margin: 12px 0 0; padding-left: 18px; color: #d9e8eb; line-height: 1.55; }
+    .raw-output { max-height: 280px; border-top: 1px solid #243943; margin-top: 14px; }
+    .hidden { display: none; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 34px 0 14px; }
+    .section-head h2 { margin: 0; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.04em; }
+    .section-head p { margin: 0; max-width: 560px; color: var(--muted); line-height: 1.55; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; width: fit-content; border: 1px solid #3a6070; background: #0b171e; border-radius: 999px; padding: 7px 10px; color: var(--cyan); font-size: 12px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 14px; }
     code { background: #071016; border: 1px solid #26323b; padding: 2px 6px; border-radius: 6px; color: #fff4ba; }
     footer { color: #8fa5ad; margin-top: 36px; font-size: 14px; }
     @media (max-width: 900px) {
-      .hero, .try { grid-template-columns: 1fr; }
-      .grid, .flow { grid-template-columns: 1fr 1fr; }
+      .hero, .try, .workbench { grid-template-columns: 1fr; }
+      .grid, .flow, .innovation-grid { grid-template-columns: 1fr 1fr; }
       .summary { grid-template-columns: 1fr; }
+      .section-head { display: block; }
     }
     @media (max-width: 560px) {
       main { width: min(100vw - 24px, 1180px); padding-top: 18px; }
       nav { align-items: flex-start; flex-direction: column; margin-bottom: 36px; }
-      .grid, .flow { grid-template-columns: 1fr; }
+      .grid, .flow, .innovation-grid { grid-template-columns: 1fr; }
       .navlinks { justify-content: flex-start; }
       h1 { font-size: 44px; }
     }
@@ -196,11 +226,93 @@ async def landing() -> str:
     <section class="try">
       <div class="card">
         <h2>Fast judge path</h2>
-        <p>Open <code>/demo</code>. It runs the included checkout incident through the full agent loop and returns JSON with root cause, mitigation, telemetry metadata, artifact paths, and billing.</p>
+        <p>Use the workbench below. It runs the included checkout incident through the full agent loop and renders the result directly on this page.</p>
       </div>
       <div class="card">
         <h2>Custom alert path</h2>
-        <p>Open <code>/docs</code>, expand <code>POST /alert</code>, choose Try it out, paste the sample payload or your own service alert, then execute.</p>
+        <p>Edit the alert JSON, run it, and compare root cause, telemetry mode, safe actions, generated artifacts, and budget guardrails.</p>
+      </div>
+    </section>
+
+    <section class="workbench" aria-label="Interactive incident workbench">
+      <div class="card">
+        <h2>Incident workbench</h2>
+        <p>Run the sample alert or edit the payload before sending it to <code>POST /alert</code>.</p>
+        <textarea id="payload" spellcheck="false">{
+  "incident_id": "INC-DEMO-20260607",
+  "service": "checkout-api",
+  "severity": "critical",
+  "title": "Checkout API CPU spike and HTTP 500 surge",
+  "details": {
+    "region": "us-central1",
+    "slo": "checkout-availability",
+    "trigger": "HTTP 500 rate above 5 percent for 10 minutes"
+  }
+}</textarea>
+        <div class="buttonbar">
+          <button class="button primary" id="runDemo" type="button">Run sample incident</button>
+          <button class="button secondary" id="runCustom" type="button">Run edited alert</button>
+          <button class="button secondary" id="resetPayload" type="button">Reset payload</button>
+        </div>
+        <div class="statusline" id="statusline">Ready.</div>
+      </div>
+      <div class="console" aria-label="Agent result">
+        <div class="console-head">
+          <div class="lights"><span class="green"></span><span class="amber"></span><span class="red"></span></div>
+          <div class="console-title">agent result</div>
+        </div>
+        <div class="result-grid" id="resultGrid" style="padding: 16px;">
+          <div class="pill"><small>Status</small><strong id="resultStatus">Waiting</strong></div>
+          <div class="pill"><small>Telemetry</small><strong id="resultTelemetry">Not run</strong></div>
+          <div class="pill"><small>Incident</small><strong id="resultIncident">-</strong></div>
+          <div class="pill"><small>Budget</small><strong id="resultBudget">-</strong></div>
+        </div>
+        <div style="padding: 0 16px 16px;">
+          <div class="pill">
+            <small>Root cause</small>
+            <strong id="resultCause">Run the demo to generate a diagnosis.</strong>
+          </div>
+          <ul class="actions-list" id="resultActions"></ul>
+        </div>
+        <pre class="raw-output hidden" id="rawOutput"></pre>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>Key innovations</h2>
+      <p>ZeroTouch SRE is designed as an operational agent, not a chatbot wrapper. The demo is built to show execution quality, safety, and real-world usefulness in the first minute.</p>
+    </div>
+
+    <section class="innovation-grid" aria-label="Key innovations">
+      <div class="card">
+        <span class="badge">Action over chat</span>
+        <h3>Webhook-to-artifact loop</h3>
+        <p>A single alert request produces a diagnosis, mitigation plan, safe execution record, post-mortem path, runbook path, and trace path.</p>
+      </div>
+      <div class="card">
+        <span class="badge">Partner signal</span>
+        <h3>Telemetry-first reasoning</h3>
+        <p>The agent attempts Dynatrace evidence before planning. If live telemetry is unavailable, it records a sanitized fallback note and still completes the workflow.</p>
+      </div>
+      <div class="card">
+        <span class="badge">Safe autonomy</span>
+        <h3>Policy-gated mitigation</h3>
+        <p>Only approved simulated actions can run. Destructive production writes are blocked by design, keeping operators in control.</p>
+      </div>
+      <div class="card">
+        <span class="badge">Audit ready</span>
+        <h3>Traceable decisions</h3>
+        <p>Each phase is captured: perceive, retrieve telemetry, reason, plan, execute, and synthesize. This makes the agent reviewable after the incident.</p>
+      </div>
+      <div class="card">
+        <span class="badge">Cost aware</span>
+        <h3>Budget guardrails</h3>
+        <p>Every simulated model step records token usage and estimated INR burn, with a hard guardrail for excessive loops.</p>
+      </div>
+      <div class="card">
+        <span class="badge">Cloud native</span>
+        <h3>Hosted for testing</h3>
+        <p>The project is containerized and deployed on Cloud Run with secret-backed provider configuration and public testing routes.</p>
       </div>
     </section>
 
@@ -215,6 +327,87 @@ async def landing() -> str:
       Hosted on Google Cloud Run. Source: <a href="https://github.com/PratikCreates/zerotouch-sre">github.com/PratikCreates/zerotouch-sre</a>
     </footer>
   </main>
+  <script>
+    const samplePayload = {
+      incident_id: "INC-DEMO-20260607",
+      service: "checkout-api",
+      severity: "critical",
+      title: "Checkout API CPU spike and HTTP 500 surge",
+      details: {
+        region: "us-central1",
+        slo: "checkout-availability",
+        trigger: "HTTP 500 rate above 5 percent for 10 minutes"
+      }
+    };
+    const payloadBox = document.getElementById("payload");
+    const statusline = document.getElementById("statusline");
+    const rawOutput = document.getElementById("rawOutput");
+
+    function setStatus(text) {
+      statusline.textContent = text;
+    }
+
+    function money(value) {
+      if (value === undefined || value === null) return "-";
+      return "INR " + Number(value).toFixed(4);
+    }
+
+    function renderResult(data) {
+      document.getElementById("resultStatus").textContent = data.ok ? data.status : "failed";
+      document.getElementById("resultTelemetry").textContent = (data.telemetry && data.telemetry.mode ? data.telemetry.mode : data.telemetry_mode || "-") + " / " + (data.telemetry && data.telemetry.source ? data.telemetry.source : "-");
+      document.getElementById("resultIncident").textContent = data.incident_id || "-";
+      document.getElementById("resultBudget").textContent = data.billing ? money(data.billing.estimated_cost_inr) : "-";
+      document.getElementById("resultCause").textContent = data.root_cause || "No root cause returned.";
+      const actions = document.getElementById("resultActions");
+      actions.innerHTML = "";
+      const planned = data.mitigation && Array.isArray(data.mitigation.actions) ? data.mitigation.actions : [];
+      planned.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = `${item.action} on ${item.target}: ${item.status}`;
+        actions.appendChild(li);
+      });
+      rawOutput.classList.remove("hidden");
+      rawOutput.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function runPayload(payload) {
+      setStatus("Running incident loop...");
+      rawOutput.classList.add("hidden");
+      const response = await fetch("/alert", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Request failed");
+      }
+      renderResult(data);
+      setStatus("Completed. Review the diagnosis, actions, telemetry, and raw trace preview.");
+    }
+
+    document.getElementById("runDemo").addEventListener("click", async () => {
+      payloadBox.value = JSON.stringify(samplePayload, null, 2);
+      try {
+        await runPayload(samplePayload);
+      } catch (error) {
+        setStatus("Error: " + error.message);
+      }
+    });
+
+    document.getElementById("runCustom").addEventListener("click", async () => {
+      try {
+        await runPayload(JSON.parse(payloadBox.value));
+      } catch (error) {
+        setStatus("Error: " + error.message);
+      }
+    });
+
+    document.getElementById("resetPayload").addEventListener("click", () => {
+      payloadBox.value = JSON.stringify(samplePayload, null, 2);
+      setStatus("Payload reset.");
+    });
+  </script>
 </body>
 </html>"""
 
