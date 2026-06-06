@@ -21,6 +21,7 @@ It opens a full interactive website with an editable incident workbench. Click *
 - Hosted backend: [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 - Health check: [https://zerotouch-sre-971465910048.us-central1.run.app/health](https://zerotouch-sre-971465910048.us-central1.run.app/health)
 - Browser demo: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
+- Raw demo JSON: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
 Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, key innovation cards, and direct links to the API docs and source.
@@ -138,7 +139,13 @@ Open:
 https://zerotouch-sre-971465910048.us-central1.run.app/demo
 ```
 
-This runs the included checkout incident through the same engine used by `POST /alert`.
+This runs the included checkout incident through the same engine used by `POST /alert`, then renders the result as a plain-English visual walkthrough.
+
+For raw JSON output:
+
+```text
+https://zerotouch-sre-971465910048.us-central1.run.app/demo.json
+```
 
 ### Interactive Docs
 
@@ -148,7 +155,7 @@ Open:
 https://zerotouch-sre-971465910048.us-central1.run.app/docs
 ```
 
-Use the Swagger UI `POST /alert` form with the sample payload from [sample_alert.json](sample_alert.json).
+Use `GET /demo.json` for the fastest raw response, or use the Swagger UI `POST /alert` form with the sample payload from [sample_alert.json](sample_alert.json).
 
 ### Alert
 
