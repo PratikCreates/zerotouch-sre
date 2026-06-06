@@ -8,7 +8,7 @@ Use this after the local build is green.
 - Track: `Dynatrace`
 - Hosted project URL: `https://zerotouch-sre-971465910048.us-central1.run.app`
 - Public repository URL: push this project to a public GitHub repository with `MIT-LICENSE.txt` visible at the top level.
-- Demo video URL: record a roughly 3-minute demo using `DEMO_RECORDING_SCRIPT.md`.
+- Demo video URL: upload `demo_assets\zerotouch_sre_demo.mp4`, or record a narrated take using `DEMO_RECORDING_SCRIPT.md`.
 - Description: use `DEVPOST_SUBMISSION.md`.
 
 ## Demo Video Script
@@ -41,6 +41,31 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 7. Open `post_mortem.md`, `runbook.json`, and `agent_trace.json`.
 8. Explain live-first behavior: Dynatrace/Gemini are attempted with real credentials; auth or API issues fall back safely.
 9. Show `python -m pytest -q` passing.
+
+## Generated Demo Asset
+
+A silent slide-based MP4 is generated locally at:
+
+```powershell
+demo_assets\zerotouch_sre_demo.mp4
+```
+
+Regenerate it with:
+
+```powershell
+python scripts\create_demo_video.py
+```
+
+Upload the MP4 to YouTube, Loom, Google Drive, or another public video host, then paste that public URL into Devpost.
+
+## GitHub Publishing
+
+GitHub CLI is installed, but authentication is required before I can push from this machine:
+
+```powershell
+gh auth login
+gh repo create zerotouch-sre --public --source . --remote origin --push
+```
 
 ## Local Evidence Commands
 

@@ -14,6 +14,7 @@ def test_required_hackathon_deliverables_exist():
         "DEVPOST_SUBMISSION.md",
         "CLOUD_RUN_DEPLOYMENT.md",
         "DEMO_RECORDING_SCRIPT.md",
+        "FINAL_SUBMISSION_FIELDS.md",
         "Dockerfile",
         "requirements.txt",
         "sample_alert.json",
@@ -64,6 +65,16 @@ def test_demo_video_generator_is_available_and_ignored():
     assert "zerotouch_sre_demo.mp4" in generator
     assert "ffmpeg" in generator
     assert "demo_assets/" in gitignore
+
+
+def test_final_submission_fields_are_copy_paste_ready():
+    fields = ROOT.joinpath("FINAL_SUBMISSION_FIELDS.md").read_text(encoding="utf-8")
+
+    assert "Hosted Project URL" in fields
+    assert "https://zerotouch-sre-971465910048.us-central1.run.app" in fields
+    assert "Public Repository URL" in fields
+    assert "Demo Video URL" in fields
+    assert "zerotouch_sre_demo.mp4" in fields
 
 
 def test_cloud_run_preflight_does_not_expose_secret_values():

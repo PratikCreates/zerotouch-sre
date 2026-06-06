@@ -46,6 +46,7 @@ def readiness() -> dict[str, object]:
         ("runbook", "Sample runbook exists", exists("runbook.json") and '"timeline"' in read("runbook.json")),
         ("trace", "Sample agent trace exists", exists("agent_trace.json") and '"stages"' in read("agent_trace.json")),
         ("demo", "Demo response exists", exists("demo_response.json") and '"trace_path"' in read("demo_response.json")),
+        ("demo", "Generated video asset exists", exists("demo_assets/zerotouch_sre_demo.mp4")),
         ("devpost", "Devpost draft exists", "What It Does" in devpost and "Demo Flow" in devpost),
         ("status", "Status log exists", "Definition of Done Evidence" in status),
         ("spec", "Original prompt retained", "definition of done" in prompt.lower()),
@@ -54,7 +55,7 @@ def readiness() -> dict[str, object]:
     blockers = [item for item in results if item["status"] != "ok"]
     remaining_external_fields = [
         "Public repository URL after pushing to GitHub",
-        "Demo video URL after recording/uploading ~3 minute demo",
+        "Demo video URL after uploading demo_assets/zerotouch_sre_demo.mp4",
     ]
     if "https://zerotouch-sre-971465910048.us-central1.run.app" not in deployment:
         remaining_external_fields.insert(0, "Hosted project URL after Cloud Run deploy")
