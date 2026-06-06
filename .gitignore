@@ -1,4 +1,5 @@
 .env
+PROMPT.txt
 .venv/
 _private/
 scripts/
