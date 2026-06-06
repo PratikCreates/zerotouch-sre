@@ -12,7 +12,7 @@ The hosted project is the best first stop:
 
 [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 
-It opens a full interactive website with an editable incident workbench. Click **Review sample incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, and raw response.
+It opens a full interactive website with an editable incident workbench. Click **Run checkout incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, and raw response.
 
 ![Hosted health check](assets/screenshots/01-health-check.png)
 
@@ -20,8 +20,8 @@ It opens a full interactive website with an editable incident workbench. Click *
 
 - Hosted backend: [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 - Health check: [https://zerotouch-sre-971465910048.us-central1.run.app/health](https://zerotouch-sre-971465910048.us-central1.run.app/health)
-- Guided incident review: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
-- Raw sample response: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
+- Incident sandbox: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
+- Raw scenario response: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
 Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, operational capability cards, and direct links to the API docs and source.
@@ -34,12 +34,12 @@ The hosted URL opens as a product surface, not a blank API root.
 
 The guided incident review translates the raw agent response into an operator-readable incident summary.
 
-![Guided incident review](assets/screenshots/05-visual-demo-result.png)
+![Incident sandbox](assets/screenshots/05-visual-demo-result.png)
 
 ## The One-Minute Tour
 
 1. Open the hosted project URL.
-2. Click **Review sample incident** in the embedded workbench.
+2. Click **Run checkout incident** in the embedded workbench.
 3. Watch the page populate with:
    - incident status
    - telemetry source and mode
@@ -233,7 +233,7 @@ The public API returns paths to those artifacts. The hosted page also shows the 
 
 ## Design Notes
 
-The project is intentionally machine-to-machine at the backend layer, but the hosted root URL is a real product surface for operators and technical evaluators. It gives teams a fast way to understand the workflow, run the sample incident, edit the payload, and see the response without needing local setup.
+The project is intentionally machine-to-machine at the backend layer, but the hosted root URL is a real product surface for operators and platform teams. It gives teams a fast way to understand the workflow, run the checkout outage scenario, edit the payload, and see the response without needing local setup.
 
 The UI emphasizes:
 

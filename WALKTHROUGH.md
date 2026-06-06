@@ -33,7 +33,7 @@ This proves the Cloud Run service is reachable and the FastAPI app has started c
 
 ## 2. Send A Production Alert
 
-Guided incident review:
+Incident sandbox:
 
 ```text
 https://zerotouch-sre-971465910048.us-central1.run.app/demo

@@ -247,11 +247,11 @@ async def api_docs() -> str:
     <img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" />
     <div>
       <h1>ZeroTouch SRE API</h1>
-      <p>Use <strong>GET /demo</strong> for a guided incident review, <strong>GET /demo.json</strong> for raw output, or <strong>POST /alert</strong> with a custom incident payload.</p>
+      <p>Use the incident sandbox for a guided operational review, inspect the raw JSON when needed, or send a custom payload to <strong>POST /alert</strong>.</p>
     </div>
     <nav class="docs-actions">
       <a href="/">Open website</a>
-      <a class="secondary" href="/demo">Review sample incident</a>
+      <a class="secondary" href="/demo">Open incident sandbox</a>
       <a class="secondary" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
     </nav>
   </header>
@@ -413,7 +413,7 @@ async def landing() -> str:
     <nav>
       <div class="brand"><img class="mark" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="navlinks">
-        <a href="/demo">Sample Incident</a>
+        <a href="/demo">Incident Sandbox</a>
         <a href="/docs">API Docs</a>
         <a href="/health">Health</a>
         <a href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
@@ -431,8 +431,8 @@ async def landing() -> str:
           runbook, trace, and budget snapshot.
         </p>
         <div class="actions">
-          <a class="button primary" href="/demo">Review sample incident</a>
-          <a class="button secondary" href="/docs">Try custom alert</a>
+          <a class="button primary" href="/demo">Open incident sandbox</a>
+          <a class="button secondary" href="/docs">API workbench</a>
           <a class="button secondary" href="https://github.com/PratikCreates/zerotouch-sre">Review source</a>
         </div>
         <div class="summary">
@@ -441,10 +441,10 @@ async def landing() -> str:
           <div class="metric"><b>Auditable</b><span>Every stage is written to an agent trace.</span></div>
         </div>
       </div>
-      <div class="console" aria-label="Sample incident payload">
+      <div class="console" aria-label="Checkout outage payload">
         <div class="console-head">
           <div class="lights"><span class="red"></span><span class="amber"></span><span class="green"></span></div>
-          <div class="console-title">sample_alert.json</div>
+          <div class="console-title">checkout_alert.json</div>
         </div>
         <pre>{
   <span class="token">"incident_id"</span>: "INC-DEMO-20260607",
@@ -470,8 +470,8 @@ async def landing() -> str:
 
     <section class="try">
       <div class="card">
-        <h2>Guided incident review</h2>
-        <p>Use the workbench below to run the included checkout incident through the full agent loop and inspect the operational outcome directly on this page.</p>
+        <h2>Incident sandbox</h2>
+        <p>Run the included checkout outage through the full response loop and inspect the operational outcome directly on this page.</p>
       </div>
       <div class="card">
         <h2>Custom alert path</h2>
@@ -482,7 +482,7 @@ async def landing() -> str:
     <section class="workbench" aria-label="Interactive incident workbench">
       <div class="card">
         <h2>Incident workbench</h2>
-        <p>Run the sample alert or edit the payload before sending it to <code>POST /alert</code>.</p>
+        <p>Run the checkout outage scenario or edit the payload before sending it to <code>POST /alert</code>.</p>
         <textarea id="payload" spellcheck="false">{
   "incident_id": "INC-DEMO-20260607",
   "service": "checkout-api",
@@ -495,7 +495,7 @@ async def landing() -> str:
   }
 }</textarea>
         <div class="buttonbar">
-          <button class="button primary" id="runDemo" type="button">Review sample incident</button>
+          <button class="button primary" id="runDemo" type="button">Run checkout incident</button>
           <button class="button secondary" id="runCustom" type="button">Run edited alert</button>
           <button class="button secondary" id="resetPayload" type="button">Reset payload</button>
         </div>
@@ -515,7 +515,7 @@ async def landing() -> str:
         <div style="padding: 0 16px 16px;">
           <div class="pill">
             <small>Root cause</small>
-            <strong id="resultCause">Run the sample incident to generate a diagnosis.</strong>
+            <strong id="resultCause">Run an incident to generate a diagnosis.</strong>
           </div>
           <ul class="actions-list" id="resultActions"></ul>
         </div>
@@ -672,9 +672,9 @@ async def health() -> dict[str, str]:
     "/demo",
     tags=["Product", "Incident Agent"],
     response_class=HTMLResponse,
-    summary="Open the guided sample incident review",
+    summary="Open the incident sandbox",
     description=(
-        "Runs the sample checkout alert through the same engine used by POST /alert, "
+        "Runs the checkout outage scenario through the same engine used by POST /alert, "
         "then renders the result as a guided incident review page."
     ),
 )
@@ -692,7 +692,7 @@ async def demo() -> HTMLResponse:
     response_model=AlertResponse,
     summary="Run the built-in checkout incident as JSON",
     description=(
-        "Runs the sample checkout alert through the same engine used by POST /alert "
+        "Runs the checkout outage scenario through the same engine used by POST /alert "
         "and returns the raw machine-readable response."
     ),
 )
@@ -809,7 +809,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
       <div class="brand"><img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="links">
         <a class="button primary" href="/">Open workbench</a>
-        <a class="button" href="/demo.json">Raw response</a>
+        <a class="button" href="/demo.json">Raw JSON</a>
         <a class="button" href="/docs">API docs</a>
         <a class="button" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
       </div>
@@ -817,13 +817,13 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
 
     <div class="review-note">
       <span class="pill">Incident review</span>
-      <span><strong>Sample checkout outage:</strong> this page runs the alert through ZeroTouch SRE and summarizes the result for operators. The raw machine-readable response is separate at <a href="/demo.json">/demo.json</a>.</span>
+      <span><strong>Checkout outage scenario:</strong> this page runs the alert through ZeroTouch SRE and summarizes the result for operators. The raw machine-readable response is separate at <a href="/demo.json">/demo.json</a>.</span>
     </div>
 
     <section class="hero">
       <img class="logo" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE autonomous incident response" />
       <div class="panel">
-        <div class="eyebrow">Sample incident completed</div>
+        <div class="eyebrow">Incident run completed</div>
         <h1>Checkout incident stabilized.</h1>
         <p>A single alert comes in. ZeroTouch SRE checks operational context, builds a root-cause hypothesis, chooses policy-safe actions, and leaves a review trail for the human owner.</p>
         <div class="status">
