@@ -13,6 +13,8 @@ ZeroTouch SRE is a FastAPI backend that receives a production alert, gathers tel
 - Browser demo: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
+Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, key innovation cards, and direct links to the API docs and source.
+
 ## What It Does
 
 1. Accepts an incident alert at `POST /alert`.
