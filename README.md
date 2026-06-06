@@ -24,7 +24,7 @@ It opens a full interactive website with an editable incident workbench. Click *
 - Raw sample response: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
-Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, key innovation cards, and direct links to the API docs and source.
+Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, operational capability cards, and direct links to the API docs and source.
 
 ## Product Walkthrough
 
@@ -240,7 +240,7 @@ The UI emphasizes:
 - a clear first action
 - readable incident payload
 - visible agent phases
-- direct innovation callouts
+- direct operational capability callouts
 - safe-action language
 - API docs as a secondary path
 
@@ -300,6 +300,8 @@ Never commit `.env` files. The deployed Cloud Run service uses Secret Manager fo
 ```powershell
 python -m compileall app -q
 ```
+
+Private local packaging helpers are kept out of the public repository history. When present locally, `scripts/capture_demo.py --live` captures the hosted response into `demo_response.json` and records a lightweight `agent_trace.json` pointer for review.
 
 Current package status:
 
