@@ -10,6 +10,8 @@ ZeroTouch SRE is a FastAPI backend that receives a production alert, gathers tel
 
 - Hosted backend: [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 - Health check: [https://zerotouch-sre-971465910048.us-central1.run.app/health](https://zerotouch-sre-971465910048.us-central1.run.app/health)
+- Browser demo: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
+- Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
 ## What It Does
 
@@ -66,6 +68,26 @@ Example response:
 }
 ```
 
+### Browser Demo
+
+Open:
+
+```text
+https://zerotouch-sre-971465910048.us-central1.run.app/demo
+```
+
+This runs the included checkout incident through the same engine used by `POST /alert`.
+
+### Interactive Docs
+
+Open:
+
+```text
+https://zerotouch-sre-971465910048.us-central1.run.app/docs
+```
+
+Use the Swagger UI `POST /alert` form with the sample payload from [sample_alert.json](sample_alert.json).
+
 ### Alert
 
 ```powershell
@@ -84,6 +106,7 @@ Key response fields:
 - `root_cause`
 - `mitigation`
 - `telemetry_mode`
+- `telemetry`
 - `post_mortem_path`
 - `runbook_path`
 - `trace_path`

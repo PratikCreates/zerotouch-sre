@@ -4,6 +4,14 @@ This walkthrough shows how to validate ZeroTouch SRE from the hosted Cloud Run s
 
 ## 1. Confirm The Hosted Service
 
+Open the landing page:
+
+```text
+https://zerotouch-sre-971465910048.us-central1.run.app/
+```
+
+The page links to the browser demo, API docs, health check, and source repository.
+
 Run:
 
 ```powershell
@@ -25,6 +33,16 @@ This proves the Cloud Run service is reachable and the FastAPI app has started c
 
 ## 2. Send A Production Alert
 
+Fast browser path:
+
+```text
+https://zerotouch-sre-971465910048.us-central1.run.app/demo
+```
+
+That endpoint runs the included checkout incident through the full backend loop.
+
+Manual API path:
+
 Run:
 
 ```powershell
@@ -41,6 +59,7 @@ The response should include:
 - `status: mitigated`
 - `root_cause`
 - `telemetry_mode`
+- `telemetry`
 - `mitigation`
 - `post_mortem_path`
 - `runbook_path`
@@ -100,6 +119,7 @@ $response = Invoke-RestMethod `
   -Body (Get-Content .\sample_alert.json -Raw)
 
 $response | Select-Object ok,status,telemetry_mode,incident_id
+$response.telemetry
 ```
 
 That end-to-end check validates the hosted webhook, incident loop, mitigation policy, and artifact generation path.

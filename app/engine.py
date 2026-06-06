@@ -28,6 +28,8 @@ class EngineResult:
     root_cause: str
     mitigation: dict[str, Any]
     telemetry_mode: str
+    telemetry_source: str
+    telemetry_error: str | None
     post_mortem_path: str
     runbook_path: str
     trace_path: str
@@ -99,6 +101,8 @@ class ZeroTouchSREEngine:
             root_cause=reasoning["root_cause"],
             mitigation=mitigation,
             telemetry_mode=telemetry_result.mode,
+            telemetry_source=str(telemetry_result.telemetry.get("source", "unknown")),
+            telemetry_error=telemetry_result.error,
             post_mortem_path=str(post_mortem_path),
             runbook_path=str(runbook_path),
             trace_path=str(trace_path),
