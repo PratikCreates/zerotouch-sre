@@ -1,8 +1,18 @@
 # ZeroTouch SRE
 
+![ZeroTouch SRE](assets/zerotouch_sre_logo.png)
+
 Autonomous incident triage and mitigation planning for production SRE teams.
 
 ZeroTouch SRE is a FastAPI backend that receives a production alert, gathers telemetry, identifies a likely root cause, runs proposed actions through a safe simulation policy, and produces incident artifacts for review. It is designed for teams that want agentic operations without giving an unreviewed agent destructive production access.
+
+## Start Here
+
+The hosted project is the best first stop:
+
+[https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
+
+It opens a full interactive website with an editable incident workbench. Click **Run sample incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, and raw JSON.
 
 ![Hosted health check](assets/screenshots/01-health-check.png)
 
@@ -14,6 +24,20 @@ ZeroTouch SRE is a FastAPI backend that receives a production alert, gathers tel
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
 Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, key innovation cards, and direct links to the API docs and source.
+
+## The One-Minute Tour
+
+1. Open the hosted project URL.
+2. Click **Run sample incident** in the embedded workbench.
+3. Watch the page populate with:
+   - incident status
+   - telemetry source and mode
+   - root-cause diagnosis
+   - simulated mitigation actions
+   - billing guardrail snapshot
+   - raw response JSON
+4. Edit the alert payload and click **Run edited alert** to prove the backend is live.
+5. Open `/docs` for a branded Swagger UI with examples and response schemas.
 
 ## What It Does
 
@@ -27,6 +51,17 @@ Start with the hosted backend URL. It opens an interactive website with an edita
 8. Tracks estimated token burn against configured budget guardrails.
 
 ![Alert response](assets/screenshots/02-alert-result.png)
+
+## Key Innovations
+
+| Area | What ZeroTouch SRE Shows |
+| --- | --- |
+| Action over chat | The agent runs a complete operational loop instead of only answering a question. |
+| Telemetry-first reasoning | Dynatrace evidence is attempted before root-cause reasoning and mitigation planning. |
+| Safe autonomy | Mitigations are policy-gated and simulated; destructive writes are blocked. |
+| Auditability | Each run produces a post-mortem, runbook, mitigation audit trail, and agent trace. |
+| Cost awareness | Simulated model usage is tracked against INR budget guardrails. |
+| Hosted testing | The Cloud Run URL is a usable product surface, not just a raw API endpoint. |
 
 ## Why It Matters
 
@@ -51,7 +86,32 @@ The backend follows a controlled incident loop:
 - **Budgeting**: `app/billing_guard.py` estimates usage and blocks excessive burn.
 - **Runtime metadata**: `app/adk_adapter.py` records Google ADK availability and model-role metadata.
 
+## Agent Loop
+
+```mermaid
+flowchart LR
+    A["Incoming alert"] --> B["Perceive incident"]
+    B --> C["Retrieve telemetry"]
+    C --> D["Reason about root cause"]
+    D --> E["Plan mitigation"]
+    E --> F["Policy gate"]
+    F --> G["Simulate safe actions"]
+    G --> H["Write artifacts"]
+```
+
+The agent attempts live provider evidence first. If live telemetry is unavailable, the deterministic Dynatrace-style fallback keeps the workflow testable while making fallback mode visible in the response.
+
 ## Public API
+
+### Website
+
+Open:
+
+```text
+https://zerotouch-sre-971465910048.us-central1.run.app/
+```
+
+Use the embedded workbench to run or edit an incident without leaving the page.
 
 ### Health
 
@@ -114,6 +174,23 @@ Key response fields:
 - `trace_path`
 - `billing`
 
+Example custom alert:
+
+```json
+{
+  "incident_id": "INC-WORLD-CUP-PAYMENTS",
+  "service": "ticketing-payments",
+  "severity": "high",
+  "title": "Payment failures during ticket sale surge",
+  "details": {
+    "region": "northamerica-northeast1",
+    "slo": "successful-payment-rate",
+    "trigger": "Payment authorization failures above 4 percent",
+    "business_event": "high-demand public ticket window"
+  }
+}
+```
+
 ## Safety Model
 
 ZeroTouch SRE is intentionally simulation-first.
@@ -125,6 +202,30 @@ Allowed actions:
 - `open_incident_channel`
 
 The action executor rejects unapproved or destructive actions. This keeps the agent useful during incident triage while preserving human control over production changes.
+
+## Artifact Outputs
+
+Each successful run writes review artifacts inside the running service environment:
+
+- post-mortem markdown
+- machine-readable runbook JSON
+- agent trace JSON
+- mitigation audit log
+
+The public API returns paths to those artifacts. The hosted page also shows the raw response so the generated outputs are easy to inspect during a demo.
+
+## Design Notes
+
+The project is intentionally machine-to-machine at the backend layer, but the hosted root URL is a real product surface for judging and testing. It gives reviewers a fast way to understand the workflow, run the sample incident, edit the payload, and see the response without needing local setup.
+
+The UI emphasizes:
+
+- a clear first action
+- readable incident payload
+- visible agent phases
+- direct innovation callouts
+- safe-action language
+- API docs as a secondary path
 
 ## Local Setup
 

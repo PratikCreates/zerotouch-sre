@@ -1,19 +1,24 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.billing_guard import BudgetGuardError
 from app.engine import ZeroTouchSREEngine
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
 app = FastAPI(
     title="ZeroTouch SRE",
     description="Autonomous SRE alert triage and mitigation backend for production operations teams.",
     version="0.1.0",
+    docs_url=None,
     summary="Alert in, diagnosis and safe mitigation artifacts out.",
     contact={
         "name": "Pratik Shah",
@@ -38,6 +43,8 @@ app = FastAPI(
         },
     ],
 )
+
+app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")
 
 
 class AlertPayload(BaseModel):
@@ -198,6 +205,68 @@ DEMO_ALERT = {
 
 
 @app.get(
+    "/docs",
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
+async def api_docs() -> str:
+    return """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZeroTouch SRE - API Docs</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
+  <link rel="icon" href="/assets/zerotouch_sre_logo.png" />
+  <style>
+    body { margin: 0; background: #081014; color: #f4fbfb; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .docs-hero { display: grid; grid-template-columns: 104px 1fr auto; gap: 20px; align-items: center; padding: 24px clamp(16px, 4vw, 44px); border-bottom: 1px solid #263f49; background: radial-gradient(circle at 12% 0%, rgba(131,231,255,.18), transparent 32%), linear-gradient(135deg, #0b151b, #101a21); }
+    .docs-hero img { width: 104px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid #31525f; }
+    .docs-hero h1 { margin: 0 0 6px; font-size: clamp(28px, 5vw, 48px); letter-spacing: -.04em; }
+    .docs-hero p { margin: 0; color: #bdd0d6; line-height: 1.5; max-width: 760px; }
+    .docs-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+    .docs-actions a { text-decoration: none; color: #06120b; background: #b8ffd7; border: 1px solid #b8ffd7; border-radius: 8px; padding: 10px 12px; font-weight: 900; white-space: nowrap; }
+    .docs-actions a.secondary { color: #f4fbfb; background: #17242c; border-color: #345969; }
+    #swagger-ui { background: #f7fafb; min-height: 100vh; }
+    .swagger-ui .topbar { display: none; }
+    @media (max-width: 820px) {
+      .docs-hero { grid-template-columns: 76px 1fr; }
+      .docs-hero img { width: 76px; height: 56px; }
+      .docs-actions { grid-column: 1 / -1; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header class="docs-hero">
+    <img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" />
+    <div>
+      <h1>ZeroTouch SRE API</h1>
+      <p>Use <strong>GET /demo</strong> for the fastest judge path, or <strong>POST /alert</strong> with a custom incident payload to run the full agent loop.</p>
+    </div>
+    <nav class="docs-actions">
+      <a href="/">Open website</a>
+      <a class="secondary" href="/demo">Run demo</a>
+      <a class="secondary" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
+    </nav>
+  </header>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: "/openapi.json",
+      dom_id: "#swagger-ui",
+      deepLinking: true,
+      displayRequestDuration: true,
+      defaultModelsExpandDepth: 1,
+      defaultModelExpandDepth: 2,
+      tryItOutEnabled: true
+    });
+  </script>
+</body>
+</html>"""
+
+
+@app.get(
     "/",
     response_class=HTMLResponse,
     tags=["Showcase"],
@@ -252,11 +321,12 @@ async def landing() -> str:
     main { width: min(1180px, calc(100vw - 36px)); margin: 0 auto; padding: 34px 0 52px; position: relative; }
     nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 54px; }
     .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: -.02em; }
-    .mark { width: 34px; height: 34px; border: 1px solid var(--line); background: conic-gradient(from 180deg, var(--mint), var(--cyan), #1d2b34, var(--mint)); border-radius: 8px; box-shadow: 0 0 32px rgba(131,231,255,.18); }
+    .mark { width: 48px; height: 34px; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 0 32px rgba(131,231,255,.18); object-fit: cover; background: #071016; }
     .navlinks { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
     .navlinks a, .button { text-decoration: none; border: 1px solid var(--line); background: rgba(16,26,33,.76); color: var(--ink); padding: 11px 14px; border-radius: 8px; font-weight: 800; font-size: 14px; }
     .navlinks a:hover, .button:hover { border-color: var(--cyan); }
     .hero { display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(360px, .97fr); gap: 28px; align-items: stretch; }
+    .hero-logo { width: min(520px, 100%); border: 1px solid #31525f; border-radius: 14px; margin: 0 0 22px; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
     .eyebrow { color: var(--cyan); font-weight: 900; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; }
     h1 { font-size: clamp(46px, 8vw, 92px); line-height: .9; margin: 14px 0 18px; letter-spacing: -0.055em; max-width: 760px; }
     .lede { color: #dce9ec; font-size: clamp(18px, 2vw, 22px); line-height: 1.55; max-width: 780px; margin: 0; }
@@ -335,7 +405,7 @@ async def landing() -> str:
 <body>
   <main>
     <nav>
-      <div class="brand"><div class="mark"></div><span>ZeroTouch SRE</span></div>
+      <div class="brand"><img class="mark" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="navlinks">
         <a href="/demo">Run Demo</a>
         <a href="/docs">API Docs</a>
@@ -346,6 +416,7 @@ async def landing() -> str:
 
     <div class="hero">
       <div>
+        <img class="hero-logo" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE autonomous incident response" />
         <div class="eyebrow">Agentic incident operations</div>
         <h1>From alert to action plan in one request.</h1>
         <p class="lede">
