@@ -321,8 +321,8 @@ class ZeroTouchSREEngine:
         if not api_key:
             return None
         prompt = (
-            "Rewrite this SRE incident post-mortem for a Google Cloud Rapid Agent Hackathon demo. "
-            "Preserve every factual detail, keep markdown headings, add no secrets, and keep it under 900 words.\n\n"
+            "Rewrite this SRE incident post-mortem for a production operations review. Preserve every factual detail, "
+            "keep markdown headings, add no secrets, avoid promotional language, and keep it under 900 words.\n\n"
             f"{deterministic_report}"
         )
         payload = {

@@ -12,7 +12,7 @@ from app.engine import ZeroTouchSREEngine
 
 app = FastAPI(
     title="ZeroTouch SRE",
-    description="Autonomous SRE alert triage and mitigation backend for the Google Cloud Rapid Agent Hackathon.",
+    description="Autonomous SRE alert triage and mitigation backend for production operations teams.",
     version="0.1.0",
 )
 
