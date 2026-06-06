@@ -13,6 +13,7 @@ def test_required_hackathon_deliverables_exist():
         "HACKATHON_STATUS.md",
         "DEVPOST_SUBMISSION.md",
         "CLOUD_RUN_DEPLOYMENT.md",
+        "DEMO_RECORDING_SCRIPT.md",
         "Dockerfile",
         "requirements.txt",
         "sample_alert.json",
@@ -44,6 +45,15 @@ def test_capture_demo_script_is_documented_and_present():
     assert "demo_response.json" in script
     assert "agent_trace.json" in readme
     assert "capture_demo.py" in readme
+
+
+def test_demo_recording_script_covers_hosted_flow():
+    script = ROOT.joinpath("DEMO_RECORDING_SCRIPT.md").read_text(encoding="utf-8")
+
+    assert "https://zerotouch-sre-971465910048.us-central1.run.app" in script
+    assert "POST" in script
+    assert "agent_trace.json" in script
+    assert "python -m pytest -q" in script
 
 
 def test_cloud_run_preflight_does_not_expose_secret_values():

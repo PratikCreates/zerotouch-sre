@@ -8,10 +8,12 @@ Use this after the local build is green.
 - Track: `Dynatrace`
 - Hosted project URL: `https://zerotouch-sre-971465910048.us-central1.run.app`
 - Public repository URL: push this project to a public GitHub repository with `MIT-LICENSE.txt` visible at the top level.
-- Demo video URL: record a roughly 3-minute demo showing the backend receiving an alert, returning mitigation JSON, and generating `post_mortem.md`.
+- Demo video URL: record a roughly 3-minute demo using `DEMO_RECORDING_SCRIPT.md`.
 - Description: use `DEVPOST_SUBMISSION.md`.
 
 ## Demo Video Script
+
+Use `DEMO_RECORDING_SCRIPT.md` as the polished recording script. The abbreviated flow is:
 
 1. Show the Devpost problem: on-call SRE teams need fast triage and reliable post-mortems.
 2. Show the architecture in `README.md`.
