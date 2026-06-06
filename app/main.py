@@ -14,15 +14,174 @@ app = FastAPI(
     title="ZeroTouch SRE",
     description="Autonomous SRE alert triage and mitigation backend for production operations teams.",
     version="0.1.0",
+    summary="Alert in, diagnosis and safe mitigation artifacts out.",
+    contact={
+        "name": "Pratik Shah",
+        "url": "https://www.linkedin.com/in/pratikcreates",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://github.com/PratikCreates/zerotouch-sre/blob/main/LICENSE",
+    },
+    openapi_tags=[
+        {
+            "name": "Showcase",
+            "description": "Browser-facing routes for quickly understanding and trying the hosted project.",
+        },
+        {
+            "name": "Incident Agent",
+            "description": "Machine-to-machine endpoints that run the ZeroTouch SRE incident loop.",
+        },
+        {
+            "name": "Operations",
+            "description": "Readiness and service metadata for deployment checks.",
+        },
+    ],
 )
 
 
 class AlertPayload(BaseModel):
-    incident_id: str = Field(default="INC-LOCAL-001")
-    service: str = Field(default="checkout-api")
-    severity: str = Field(default="critical")
-    title: str = Field(default="Checkout API CPU spike")
-    details: dict[str, Any] = Field(default_factory=dict)
+    incident_id: str = Field(
+        default="INC-LOCAL-001",
+        description="Stable incident identifier from an alerting system.",
+        examples=["INC-DEMO-20260607"],
+    )
+    service: str = Field(
+        default="checkout-api",
+        description="Affected service, workload, or business capability.",
+        examples=["checkout-api"],
+    )
+    severity: str = Field(
+        default="critical",
+        description="Operational severity used by the agent when framing urgency.",
+        examples=["critical"],
+    )
+    title: str = Field(
+        default="Checkout API CPU spike",
+        description="Human-readable alert title.",
+        examples=["Checkout API CPU spike and HTTP 500 surge"],
+    )
+    details: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Optional structured alert context such as region, SLO, trigger, deploy id, or owner.",
+        examples=[
+            {
+                "region": "us-central1",
+                "slo": "checkout-availability",
+                "trigger": "HTTP 500 rate above 5 percent for 10 minutes",
+            }
+        ],
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "incident_id": "INC-DEMO-20260607",
+                    "service": "checkout-api",
+                    "severity": "critical",
+                    "title": "Checkout API CPU spike and HTTP 500 surge",
+                    "details": {
+                        "region": "us-central1",
+                        "slo": "checkout-availability",
+                        "trigger": "HTTP 500 rate above 5 percent for 10 minutes",
+                    },
+                },
+                {
+                    "incident_id": "INC-WORLD-CUP-PAYMENTS",
+                    "service": "ticketing-payments",
+                    "severity": "high",
+                    "title": "Payment failures during ticket sale surge",
+                    "details": {
+                        "region": "northamerica-northeast1",
+                        "slo": "successful-payment-rate",
+                        "trigger": "Payment authorization failures above 4 percent",
+                        "business_event": "high-demand public ticket window",
+                    },
+                },
+            ]
+        }
+    }
+
+
+class HealthResponse(BaseModel):
+    status: str = Field(examples=["ok"])
+    service: str = Field(examples=["zerotouch-sre"])
+
+
+class TelemetrySummary(BaseModel):
+    mode: str = Field(description="Telemetry mode used by the agent.", examples=["mock"])
+    source: str = Field(description="Evidence source used in the incident loop.", examples=["mock-dynatrace"])
+    live_attempted: bool = Field(description="Whether a live partner telemetry path was attempted.")
+    fallback_note: str | None = Field(
+        default=None,
+        description="Sanitized fallback note when live telemetry is unavailable. No credentials are returned.",
+        examples=["Dynatrace API fallback: HTTP Error 400: Bad Request"],
+    )
+
+
+class BillingSnapshot(BaseModel):
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    estimated_cost_inr: float
+    monthly_guardrail_inr: float
+    credit_budget_inr: float
+
+
+class AlertResponse(BaseModel):
+    ok: bool
+    incident_id: str
+    status: str
+    root_cause: str
+    mitigation: dict[str, Any]
+    telemetry_mode: str
+    telemetry: TelemetrySummary
+    post_mortem_path: str
+    runbook_path: str
+    trace_path: str
+    billing: BillingSnapshot
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "ok": True,
+                "incident_id": "INC-DEMO-20260607",
+                "status": "mitigated",
+                "root_cause": "checkout-api saturated CPU at 94.7% after payment retry loop changed from capped to unbounded; HTTP 500 rate reached 7.8% with p95 latency 1840 ms.",
+                "mitigation": {
+                    "mode": "simulation",
+                    "actions": [
+                        {
+                            "sequence": 1,
+                            "action": "scale_service",
+                            "target": "checkout-api",
+                            "status": "simulated_success",
+                            "destructive": False,
+                        }
+                    ],
+                },
+                "telemetry_mode": "mock",
+                "telemetry": {
+                    "mode": "mock",
+                    "source": "mock-dynatrace",
+                    "live_attempted": True,
+                    "fallback_note": "Dynatrace API fallback: HTTP Error 400: Bad Request",
+                },
+                "post_mortem_path": "/app/reports/post_mortem_20260606_210420.md",
+                "runbook_path": "/app/reports/runbook_20260606_210421.json",
+                "trace_path": "/app/reports/agent_trace_20260606_210421.json",
+                "billing": {
+                    "input_tokens": 4500,
+                    "output_tokens": 2000,
+                    "total_tokens": 6500,
+                    "estimated_cost_inr": 2.05425,
+                    "monthly_guardrail_inr": 900.0,
+                    "credit_budget_inr": 25000.0,
+                },
+            }
+        }
+    }
 
 
 DEMO_ALERT = {
@@ -38,7 +197,16 @@ DEMO_ALERT = {
 }
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get(
+    "/",
+    response_class=HTMLResponse,
+    tags=["Showcase"],
+    summary="Open the interactive hosted showcase",
+    description=(
+        "Returns the judge-facing project website with an embedded incident workbench. "
+        "Use this as the primary hosted project URL."
+    ),
+)
 async def landing() -> str:
     return """<!doctype html>
 <html lang="en">
@@ -412,17 +580,42 @@ async def landing() -> str:
 </html>"""
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    tags=["Operations"],
+    response_model=HealthResponse,
+    summary="Check service readiness",
+    description="Returns a small readiness payload for uptime monitors and quick deployment checks.",
+)
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "zerotouch-sre"}
 
 
-@app.get("/demo")
+@app.get(
+    "/demo",
+    tags=["Showcase", "Incident Agent"],
+    response_model=AlertResponse,
+    summary="Run the built-in checkout incident",
+    description=(
+        "Runs the sample checkout alert through the same engine used by POST /alert. "
+        "This is the fastest JSON-only judging path."
+    ),
+)
 async def demo() -> dict[str, Any]:
     return await ingest_alert(AlertPayload(**DEMO_ALERT))
 
 
-@app.post("/alert")
+@app.post(
+    "/alert",
+    tags=["Incident Agent"],
+    response_model=AlertResponse,
+    summary="Run the ZeroTouch SRE incident loop",
+    description=(
+        "Accepts an alert, attempts partner telemetry, reasons about root cause, "
+        "creates a safe mitigation plan, simulates allowlisted actions, and returns "
+        "paths for generated incident artifacts."
+    ),
+)
 async def ingest_alert(payload: AlertPayload) -> dict[str, Any]:
     engine = ZeroTouchSREEngine()
     try:
