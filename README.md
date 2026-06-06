@@ -26,6 +26,16 @@ It opens a full interactive website with an editable incident workbench. Click *
 
 Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, key innovation cards, and direct links to the API docs and source.
 
+## Visual Walkthrough
+
+The hosted URL opens as a product surface, not a blank API root.
+
+![Hosted showcase](assets/screenshots/04-hosted-showcase.png)
+
+The visual demo translates the raw agent response into a non-technical incident story.
+
+![Visual demo result](assets/screenshots/05-visual-demo-result.png)
+
 ## The One-Minute Tour
 
 1. Open the hosted project URL.
