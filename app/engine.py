@@ -475,7 +475,7 @@ async def run_sample_incident() -> EngineResult:
     try:
         return await engine.handle_alert(
             {
-                "incident_id": "INC-DEMO-20260607",
+                "incident_id": "INC-CHECKOUT-20260607",
                 "service": "checkout-api",
                 "severity": "critical",
                 "title": "Checkout API CPU spike and HTTP 500 surge",
@@ -485,7 +485,7 @@ async def run_sample_incident() -> EngineResult:
         engine.billing_guard.max_monthly_burn_limit_inr = 9_000.0
         return await engine.handle_alert(
             {
-                "incident_id": "INC-DEMO-20260607",
+                "incident_id": "INC-CHECKOUT-20260607",
                 "service": "checkout-api",
                 "severity": "critical",
                 "title": "Checkout API CPU spike and HTTP 500 surge",

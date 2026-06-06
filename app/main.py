@@ -57,7 +57,7 @@ class AlertPayload(BaseModel):
     incident_id: str = Field(
         default="INC-LOCAL-001",
         description="Stable incident identifier from an alerting system.",
-        examples=["INC-DEMO-20260607"],
+        examples=["INC-CHECKOUT-20260607"],
     )
     service: str = Field(
         default="checkout-api",
@@ -90,7 +90,7 @@ class AlertPayload(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "incident_id": "INC-DEMO-20260607",
+                    "incident_id": "INC-CHECKOUT-20260607",
                     "service": "checkout-api",
                     "severity": "critical",
                     "title": "Checkout API CPU spike and HTTP 500 surge",
@@ -159,7 +159,7 @@ class AlertResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "ok": True,
-                "incident_id": "INC-DEMO-20260607",
+                "incident_id": "INC-CHECKOUT-20260607",
                 "status": "mitigated",
                 "root_cause": "checkout-api saturated CPU at 94.7% after payment retry loop changed from capped to unbounded; HTTP 500 rate reached 7.8% with p95 latency 1840 ms.",
                 "mitigation": {
@@ -197,8 +197,8 @@ class AlertResponse(BaseModel):
     }
 
 
-DEMO_ALERT = {
-    "incident_id": "INC-DEMO-20260607",
+CHECKOUT_SCENARIO_ALERT = {
+    "incident_id": "INC-CHECKOUT-20260607",
     "service": "checkout-api",
     "severity": "critical",
     "title": "Checkout API CPU spike and HTTP 500 surge",
@@ -247,11 +247,11 @@ async def api_docs() -> str:
     <img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" />
     <div>
       <h1>ZeroTouch SRE API</h1>
-      <p>Use the incident sandbox for a guided operational review, inspect the raw JSON when needed, or send a custom payload to <strong>POST /alert</strong>.</p>
+      <p>Use the checkout scenario for a guided operational review, inspect the raw JSON when needed, or send a custom payload to <strong>POST /alert</strong>.</p>
     </div>
     <nav class="docs-actions">
       <a href="/">Open website</a>
-      <a class="secondary" href="/demo">Open incident sandbox</a>
+      <a class="secondary" href="/scenario">Run checkout scenario</a>
       <a class="secondary" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
     </nav>
   </header>
@@ -413,7 +413,7 @@ async def landing() -> str:
     <nav>
       <div class="brand"><img class="mark" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="navlinks">
-        <a href="/demo">Incident Sandbox</a>
+        <a href="/scenario">Scenario</a>
         <a href="/docs">API Docs</a>
         <a href="/health">Health</a>
         <a href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
@@ -431,7 +431,7 @@ async def landing() -> str:
           runbook, trace, and budget snapshot.
         </p>
         <div class="actions">
-          <a class="button primary" href="/demo">Open incident sandbox</a>
+          <a class="button primary" href="/scenario">Run checkout scenario</a>
           <a class="button secondary" href="/docs">API workbench</a>
           <a class="button secondary" href="https://github.com/PratikCreates/zerotouch-sre">Review source</a>
         </div>
@@ -447,7 +447,7 @@ async def landing() -> str:
           <div class="console-title">checkout_alert.json</div>
         </div>
         <pre>{
-  <span class="token">"incident_id"</span>: "INC-DEMO-20260607",
+  <span class="token">"incident_id"</span>: "INC-CHECKOUT-20260607",
   <span class="token">"service"</span>: "checkout-api",
   <span class="token">"severity"</span>: "critical",
   <span class="token">"title"</span>: "Checkout API CPU spike and HTTP 500 surge",
@@ -470,7 +470,7 @@ async def landing() -> str:
 
     <section class="try">
       <div class="card">
-        <h2>Incident sandbox</h2>
+        <h2>Checkout scenario</h2>
         <p>Run the included checkout outage through the full response loop and inspect the operational outcome directly on this page.</p>
       </div>
       <div class="card">
@@ -484,7 +484,7 @@ async def landing() -> str:
         <h2>Incident workbench</h2>
         <p>Run the checkout outage scenario or edit the payload before sending it to <code>POST /alert</code>.</p>
         <textarea id="payload" spellcheck="false">{
-  "incident_id": "INC-DEMO-20260607",
+  "incident_id": "INC-CHECKOUT-20260607",
   "service": "checkout-api",
   "severity": "critical",
   "title": "Checkout API CPU spike and HTTP 500 surge",
@@ -574,7 +574,7 @@ async def landing() -> str:
   </main>
   <script>
     const samplePayload = {
-      incident_id: "INC-DEMO-20260607",
+      incident_id: "INC-CHECKOUT-20260607",
       service: "checkout-api",
       severity: "critical",
       title: "Checkout API CPU spike and HTTP 500 surge",
@@ -669,42 +669,76 @@ async def health() -> dict[str, str]:
 
 
 @app.get(
+    "/scenario",
+    tags=["Product", "Incident Agent"],
+    response_class=HTMLResponse,
+    summary="Open the checkout incident scenario",
+    description=(
+        "Runs the checkout outage scenario through the same engine used by POST /alert, "
+        "then renders the result as a guided incident review page."
+    ),
+)
+async def scenario() -> HTMLResponse:
+    payload = await _run_checkout_scenario()
+    return HTMLResponse(
+        _render_scenario_result_page(payload),
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
+
+
+@app.get(
     "/demo",
     tags=["Product", "Incident Agent"],
     response_class=HTMLResponse,
-    summary="Open the incident sandbox",
+    include_in_schema=False,
+    summary="Open the checkout incident scenario",
     description=(
         "Runs the checkout outage scenario through the same engine used by POST /alert, "
         "then renders the result as a guided incident review page."
     ),
 )
 async def demo() -> HTMLResponse:
-    payload = await _run_demo_alert()
+    payload = await _run_checkout_scenario()
     return HTMLResponse(
-        _render_demo_result_page(payload),
+        _render_scenario_result_page(payload),
         headers={"Cache-Control": "no-store, max-age=0"},
     )
+
+
+@app.get(
+    "/scenario.json",
+    tags=["Incident Agent"],
+    response_model=AlertResponse,
+    summary="Run the checkout incident scenario as JSON",
+    description=(
+        "Runs the checkout outage scenario through the same engine used by POST /alert "
+        "and returns the raw machine-readable response."
+    ),
+)
+async def scenario_json() -> dict[str, Any]:
+    return await _run_checkout_scenario()
 
 
 @app.get(
     "/demo.json",
     tags=["Incident Agent"],
     response_model=AlertResponse,
-    summary="Run the built-in checkout incident as JSON",
+    include_in_schema=False,
+    summary="Run the checkout incident scenario as JSON",
     description=(
         "Runs the checkout outage scenario through the same engine used by POST /alert "
         "and returns the raw machine-readable response."
     ),
 )
 async def demo_json() -> dict[str, Any]:
-    return await _run_demo_alert()
+    return await _run_checkout_scenario()
 
 
-async def _run_demo_alert() -> dict[str, Any]:
-    return await ingest_alert(AlertPayload(**DEMO_ALERT))
+async def _run_checkout_scenario() -> dict[str, Any]:
+    return await ingest_alert(AlertPayload(**CHECKOUT_SCENARIO_ALERT))
 
 
-def _render_demo_result_page(payload: dict[str, Any]) -> str:
+def _render_scenario_result_page(payload: dict[str, Any]) -> str:
     telemetry = payload.get("telemetry", {})
     billing = payload.get("billing", {})
     mitigation = payload.get("mitigation", {})
@@ -809,7 +843,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
       <div class="brand"><img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="links">
         <a class="button primary" href="/">Open workbench</a>
-        <a class="button" href="/demo.json">Raw JSON</a>
+        <a class="button" href="/scenario.json">Raw JSON</a>
         <a class="button" href="/docs">API docs</a>
         <a class="button" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
       </div>
@@ -817,7 +851,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
 
     <div class="review-note">
       <span class="pill">Incident review</span>
-      <span><strong>Checkout outage scenario:</strong> this page runs the alert through ZeroTouch SRE and summarizes the result for operators. The raw machine-readable response is separate at <a href="/demo.json">/demo.json</a>.</span>
+      <span><strong>Checkout outage scenario:</strong> this page runs the alert through ZeroTouch SRE and summarizes the result for operators. The raw machine-readable response is separate at <a href="/scenario.json">/scenario.json</a>.</span>
     </div>
 
     <section class="hero">

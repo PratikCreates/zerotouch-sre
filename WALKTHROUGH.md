@@ -33,10 +33,10 @@ This proves the Cloud Run service is reachable and the FastAPI app has started c
 
 ## 2. Send A Production Alert
 
-Incident sandbox:
+Checkout scenario:
 
 ```text
-https://zerotouch-sre-971465910048.us-central1.run.app/demo
+https://zerotouch-sre-971465910048.us-central1.run.app/scenario
 ```
 
 That endpoint runs the included checkout incident through the full backend loop.

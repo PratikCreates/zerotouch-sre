@@ -20,8 +20,8 @@ It opens a full interactive website with an editable incident workbench. Click *
 
 - Hosted backend: [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 - Health check: [https://zerotouch-sre-971465910048.us-central1.run.app/health](https://zerotouch-sre-971465910048.us-central1.run.app/health)
-- Incident sandbox: [https://zerotouch-sre-971465910048.us-central1.run.app/demo](https://zerotouch-sre-971465910048.us-central1.run.app/demo)
-- Raw scenario response: [https://zerotouch-sre-971465910048.us-central1.run.app/demo.json](https://zerotouch-sre-971465910048.us-central1.run.app/demo.json)
+- Checkout scenario: [https://zerotouch-sre-971465910048.us-central1.run.app/scenario](https://zerotouch-sre-971465910048.us-central1.run.app/scenario)
+- Raw scenario response: [https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json](https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json)
 - Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
 
 Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, operational capability cards, and direct links to the API docs and source.
@@ -34,7 +34,7 @@ The hosted URL opens as a product surface, not a blank API root.
 
 The guided incident review translates the raw agent response into an operator-readable incident summary.
 
-![Incident sandbox](assets/screenshots/05-visual-demo-result.png)
+![Guided incident review](assets/screenshots/05-visual-demo-result.png)
 
 ## The One-Minute Tour
 
@@ -146,7 +146,7 @@ Example response:
 Open:
 
 ```text
-https://zerotouch-sre-971465910048.us-central1.run.app/demo
+https://zerotouch-sre-971465910048.us-central1.run.app/scenario
 ```
 
 This runs the included checkout incident through the same engine used by `POST /alert`, then renders the result as an operator-readable incident review.
@@ -154,7 +154,7 @@ This runs the included checkout incident through the same engine used by `POST /
 For raw JSON output:
 
 ```text
-https://zerotouch-sre-971465910048.us-central1.run.app/demo.json
+https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json
 ```
 
 ### Interactive Docs
@@ -165,7 +165,7 @@ Open:
 https://zerotouch-sre-971465910048.us-central1.run.app/docs
 ```
 
-Use `GET /demo.json` for the fastest raw response, or use the Swagger UI `POST /alert` form with the sample payload from [sample_alert.json](sample_alert.json).
+Use `GET /scenario.json` for the fastest raw response, or use the Swagger UI `POST /alert` form with the sample payload from [sample_alert.json](sample_alert.json).
 
 ### Alert
 
