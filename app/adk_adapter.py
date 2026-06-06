@@ -17,10 +17,9 @@ class ADKRuntimeStatus:
 class GeminiADKAdapter:
     """Small compatibility layer around the Google ADK package.
 
-    The hackathon spec requires the Agent Development Kit, while local demo
-    reliability requires deterministic fallback behavior. This adapter records
-    whether the package is importable and exposes model-role metadata without
-    binding the core incident loop to a single ADK release surface.
+    Runtime environments can expose different Google ADK surfaces. This adapter
+    records whether the package is importable and exposes model-role metadata
+    without binding the core incident loop to a single ADK release surface.
     """
 
     def __init__(self, fast_model: str, synthesis_model: str) -> None:

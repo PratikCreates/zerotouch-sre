@@ -1,5 +1,8 @@
 .env
 .venv/
+_private/
+scripts/
+tests/
 __pycache__/
 .pytest_cache/
 *.pyc

@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
-COPY README.md HACKATHON_STATUS.md MIT-LICENSE.txt ./
+COPY README.md LICENSE ./
 
 EXPOSE 8080
 
