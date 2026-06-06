@@ -673,9 +673,12 @@ async def health() -> dict[str, str]:
         "then renders the result as a non-technical walkthrough page."
     ),
 )
-async def demo() -> str:
+async def demo() -> HTMLResponse:
     payload = await _run_demo_alert()
-    return _render_demo_result_page(payload)
+    return HTMLResponse(
+        _render_demo_result_page(payload),
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 
 @app.get(
@@ -740,7 +743,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
   <title>ZeroTouch SRE Demo Result</title>
   <link rel="icon" href="/assets/zerotouch_sre_logo.png" />
   <style>
-    :root {{ color-scheme: dark; --bg:#081014; --panel:#101a21; --line:#2d4651; --ink:#f4fbfb; --muted:#b7c9cf; --mint:#b8ffd7; --cyan:#83e7ff; --amber:#ffd166; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+    :root {{ color-scheme: dark; --bg:#081014; --panel:#101a21; --line:#2d4651; --ink:#f4fbfb; --muted:#b7c9cf; --mint:#b8ffd7; --cyan:#83e7ff; --amber:#ffd166; --red:#ff8f8f; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
     * {{ box-sizing: border-box; }}
     body {{ margin:0; background: radial-gradient(circle at 15% 0%, rgba(131,231,255,.16), transparent 30%), linear-gradient(135deg,#071016,#0f1715); color:var(--ink); }}
     main {{ width:min(1120px, calc(100vw - 34px)); margin:0 auto; padding:28px 0 48px; }}
@@ -751,6 +754,9 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
     a {{ color:inherit; }}
     .button {{ text-decoration:none; border:1px solid var(--line); background:#17242c; padding:10px 13px; border-radius:8px; font-weight:850; }}
     .button.primary {{ background:var(--mint); color:#06120b; border-color:var(--mint); }}
+    .demo-note {{ display:flex; gap:10px; align-items:center; border:1px solid #31525f; background:#0c1a20; border-radius:10px; padding:12px 14px; margin-bottom:18px; color:var(--muted); }}
+    .demo-note strong {{ color:var(--mint); }}
+    .pill {{ display:inline-flex; align-items:center; gap:8px; border:1px solid #31525f; background:#09151a; color:var(--cyan); border-radius:999px; padding:7px 10px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }}
     .hero {{ display:grid; grid-template-columns: .9fr 1.1fr; gap:22px; align-items:stretch; }}
     .logo {{ width:100%; border:1px solid #31525f; border-radius:14px; box-shadow:0 24px 80px rgba(0,0,0,.28); }}
     .panel {{ border:1px solid var(--line); background:rgba(16,26,33,.82); border-radius:12px; padding:22px; }}
@@ -763,6 +769,13 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
     .metric small {{ display:block; color:#8fb0ba; text-transform:uppercase; letter-spacing:.09em; font-weight:900; font-size:10px; margin-bottom:6px; }}
     .metric strong {{ color:var(--mint); word-break:break-word; }}
     .diagnosis {{ font-size:20px; color:#f7fffb; line-height:1.55; margin:0; }}
+    .split {{ display:grid; grid-template-columns:1.05fr .95fr; gap:16px; margin-top:16px; }}
+    .before-after {{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }}
+    .before-after div {{ border:1px solid #31525f; background:#0b151b; border-radius:10px; padding:14px; }}
+    .before-after small {{ display:block; color:#8fb0ba; text-transform:uppercase; letter-spacing:.09em; font-size:10px; font-weight:900; margin-bottom:8px; }}
+    .before-after strong {{ color:#f4fbfb; line-height:1.45; }}
+    .before-after .bad strong {{ color:var(--red); }}
+    .before-after .good strong {{ color:var(--mint); }}
     .flow {{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:20px; }}
     .step {{ border:1px solid #31525f; border-radius:10px; padding:14px; background:#10212a; min-height:112px; }}
     .step strong {{ display:block; color:var(--mint); margin-bottom:7px; }}
@@ -780,7 +793,8 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
     details {{ margin-top:16px; border:1px solid #31525f; border-radius:10px; background:#071016; overflow:hidden; }}
     summary {{ cursor:pointer; padding:14px 16px; color:var(--amber); font-weight:900; }}
     pre {{ margin:0; padding:16px; overflow:auto; color:#dff9e9; border-top:1px solid #263f49; font-size:13px; line-height:1.55; }}
-    @media (max-width: 900px) {{ .hero,.two {{ grid-template-columns:1fr; }} .status,.flow {{ grid-template-columns:1fr 1fr; }} }}
+    @media (max-width: 900px) {{ .hero,.two,.split {{ grid-template-columns:1fr; }} .status,.flow {{ grid-template-columns:1fr 1fr; }} }}
+    @media (max-width: 700px) {{ .before-after {{ grid-template-columns:1fr; }} }}
     @media (max-width: 560px) {{ main {{ width:min(100vw - 24px,1120px); }} nav {{ align-items:flex-start; flex-direction:column; }} .status,.flow {{ grid-template-columns:1fr; }} }}
   </style>
 </head>
@@ -790,18 +804,23 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
       <div class="brand"><img src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
       <div class="links">
         <a class="button primary" href="/">Open workbench</a>
-        <a class="button" href="/demo.json">Raw JSON</a>
+        <a class="button" href="/demo.json">Technical JSON</a>
         <a class="button" href="/docs">API docs</a>
         <a class="button" href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
       </div>
     </nav>
+
+    <div class="demo-note">
+      <span class="pill">Visual demo</span>
+      <span><strong>Best judge path:</strong> this page runs the sample alert and explains the outcome without requiring API knowledge. The JSON endpoint is separate at <a href="/demo.json">/demo.json</a>.</span>
+    </div>
 
     <section class="hero">
       <img class="logo" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE autonomous incident response" />
       <div class="panel">
         <div class="eyebrow">Sample incident completed</div>
         <h1>The agent stabilized the checkout incident.</h1>
-        <p>This page translates the raw API response into the story a reviewer needs: what happened, why it happened, what the agent safely did, and what evidence it kept.</p>
+        <p>A single alert comes in. ZeroTouch checks operational context, builds a root-cause hypothesis, chooses policy-safe actions, and leaves a review trail for the human owner.</p>
         <div class="status">
           <div class="metric"><small>Status</small><strong>{status}</strong></div>
           <div class="metric"><small>Incident</small><strong>{incident_id}</strong></div>
@@ -814,6 +833,10 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
     <section class="panel" style="margin-top:16px;">
       <h2>Plain-English diagnosis</h2>
       <p class="diagnosis">{root_cause}</p>
+      <div class="before-after">
+        <div class="bad"><small>Before</small><strong>Checkout was failing under CPU pressure, with rising HTTP 500s and slow payment retries.</strong></div>
+        <div class="good"><small>After</small><strong>Capacity relief, rollback, and incident coordination were selected under a safe simulation policy.</strong></div>
+      </div>
     </section>
 
     <section class="flow" aria-label="What the agent did">
@@ -824,7 +847,7 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
       <div class="step"><strong>Documented</strong><span>Generated review artifacts and an agent trace.</span></div>
     </section>
 
-    <section class="two">
+    <section class="split">
       <div class="panel">
         <h2>Safe actions taken</h2>
         {action_cards}
@@ -835,6 +858,17 @@ def _render_demo_result_page(payload: dict[str, Any]) -> str:
         <p>{fallback_note}</p>
         <div class="metric"><small>Total model tokens</small><strong>{tokens}</strong></div>
         <p>Actions are simulated and policy-gated. No destructive production write is performed by the demo.</p>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:16px;">
+      <h2>How to judge it in 60 seconds</h2>
+      <div class="flow" style="margin-top:0;">
+        <div class="step"><strong>1. Read the diagnosis</strong><span>It should connect symptoms to a plausible operational cause.</span></div>
+        <div class="step"><strong>2. Inspect actions</strong><span>Every mitigation explains why it is safe.</span></div>
+        <div class="step"><strong>3. Open workbench</strong><span>Change the alert payload and run it from the browser.</span></div>
+        <div class="step"><strong>4. Check docs</strong><span>The API can be tested directly from Swagger.</span></div>
+        <div class="step"><strong>5. Review source</strong><span>The public repo contains deployable code and screenshots.</span></div>
       </div>
     </section>
 
