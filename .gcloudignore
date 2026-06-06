@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.log
+reports/
+demo_response.json
+post_mortem.md
+runbook.json
+agent_trace.json
+.git/

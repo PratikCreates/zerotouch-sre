@@ -1,0 +1,11 @@
+{
+  "incident_id": "INC-DEMO-20260607",
+  "service": "checkout-api",
+  "severity": "critical",
+  "title": "Checkout API CPU spike and HTTP 500 surge",
+  "details": {
+    "region": "us-central1",
+    "slo": "checkout-availability",
+    "trigger": "HTTP 500 rate above 5 percent for 10 minutes"
+  }
+}
