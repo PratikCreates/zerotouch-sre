@@ -142,6 +142,11 @@ class BillingSnapshot(BaseModel):
     credit_budget_inr: float
 
 
+class ArtifactPreviews(BaseModel):
+    post_mortem: str = Field(description="Safe text preview of the generated post-mortem artifact.")
+    runbook: str = Field(description="Safe text preview of the generated runbook artifact.")
+
+
 class AlertResponse(BaseModel):
     ok: bool
     incident_id: str
@@ -153,6 +158,7 @@ class AlertResponse(BaseModel):
     post_mortem_path: str
     runbook_path: str
     trace_path: str
+    artifact_previews: ArtifactPreviews
     billing: BillingSnapshot
 
     model_config = {
@@ -184,6 +190,10 @@ class AlertResponse(BaseModel):
                 "post_mortem_path": "/app/reports/post_mortem_20260606_210420.md",
                 "runbook_path": "/app/reports/runbook_20260606_210421.json",
                 "trace_path": "/app/reports/agent_trace_20260606_210421.json",
+                "artifact_previews": {
+                    "post_mortem": "# ZeroTouch SRE Post-Mortem\n\n## Incident Summary\n...",
+                    "runbook": "{\n  \"incident_id\": \"INC-CHECKOUT-20260607\"\n}",
+                },
                 "billing": {
                     "input_tokens": 4500,
                     "output_tokens": 2000,
@@ -385,6 +395,10 @@ async def landing() -> str:
     .pill strong { color: var(--mint); font-size: 15px; word-break: break-word; }
     .statusline { color: var(--amber); font-weight: 900; margin: 12px 0 0; min-height: 22px; }
     .actions-list { margin: 12px 0 0; padding-left: 18px; color: #d9e8eb; line-height: 1.55; }
+    .mini-artifacts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .mini-artifact { border: 1px solid #31525f; background: #071016; border-radius: 10px; overflow: hidden; }
+    .mini-artifact h3 { margin: 0; padding: 10px 12px; border-bottom: 1px solid #263f49; color: var(--mint); font-size: 14px; }
+    .mini-artifact pre { margin: 0; padding: 12px; max-height: 190px; overflow: auto; color: #dff9e9; white-space: pre-wrap; font-size: 12px; line-height: 1.45; }
     .raw-output { max-height: 280px; border-top: 1px solid #243943; margin-top: 14px; }
     .hidden { display: none; }
     .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 34px 0 14px; }
@@ -405,6 +419,7 @@ async def landing() -> str:
     @media (max-width: 900px) {
       .hero, .try, .workbench { grid-template-columns: 1fr; }
       .grid, .flow, .innovation-grid, .story-grid { grid-template-columns: 1fr 1fr; }
+      .mini-artifacts { grid-template-columns: 1fr; }
       .summary { grid-template-columns: 1fr; }
       .section-head { display: block; }
     }
@@ -527,6 +542,16 @@ async def landing() -> str:
             <strong id="resultCause">Run an incident to generate a diagnosis.</strong>
           </div>
           <ul class="actions-list" id="resultActions"></ul>
+          <div class="mini-artifacts hidden" id="artifactPreviews" aria-label="Generated artifact previews">
+            <article class="mini-artifact">
+              <h3>Post-mortem preview</h3>
+              <pre id="postMortemPreview"></pre>
+            </article>
+            <article class="mini-artifact">
+              <h3>Runbook preview</h3>
+              <pre id="runbookPreview"></pre>
+            </article>
+          </div>
         </div>
         <pre class="raw-output hidden" id="rawOutput"></pre>
       </div>
@@ -627,6 +652,7 @@ async def landing() -> str:
     const payloadBox = document.getElementById("payload");
     const statusline = document.getElementById("statusline");
     const rawOutput = document.getElementById("rawOutput");
+    const artifactPreviews = document.getElementById("artifactPreviews");
 
     function setStatus(text) {
       statusline.textContent = text;
@@ -651,6 +677,14 @@ async def landing() -> str:
         li.textContent = `${item.action} on ${item.target}: ${item.status}`;
         actions.appendChild(li);
       });
+      const previews = data.artifact_previews || {};
+      if (previews.post_mortem || previews.runbook) {
+        artifactPreviews.classList.remove("hidden");
+        document.getElementById("postMortemPreview").textContent = previews.post_mortem || "Post-mortem preview unavailable.";
+        document.getElementById("runbookPreview").textContent = previews.runbook || "Runbook preview unavailable.";
+      } else {
+        artifactPreviews.classList.add("hidden");
+      }
       rawOutput.classList.remove("hidden");
       rawOutput.textContent = JSON.stringify(data, null, 2);
     }
@@ -658,6 +692,7 @@ async def landing() -> str:
     async function runPayload(payload) {
       setStatus("Running incident loop...");
       rawOutput.classList.add("hidden");
+      artifactPreviews.classList.add("hidden");
       const response = await fetch("/alert", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -981,6 +1016,10 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
 
 
 def _artifact_preview(path_value: Any, *, max_chars: int) -> str:
+    return escape(_artifact_text_preview(path_value, max_chars=max_chars))
+
+
+def _artifact_text_preview(path_value: Any, *, max_chars: int) -> str:
     if not path_value:
         return "Artifact was not generated for this run."
     try:
@@ -995,7 +1034,7 @@ def _artifact_preview(path_value: Any, *, max_chars: int) -> str:
         return "Artifact preview is unavailable."
     if len(text) > max_chars:
         text = text[:max_chars].rstrip() + "\n\n[preview truncated]"
-    return escape(text)
+    return text
 
 
 def _format_action_label(action: str) -> str:
@@ -1040,6 +1079,10 @@ async def ingest_alert(payload: AlertPayload) -> dict[str, Any]:
         "post_mortem_path": result.post_mortem_path,
         "runbook_path": result.runbook_path,
         "trace_path": result.trace_path,
+        "artifact_previews": {
+            "post_mortem": _artifact_text_preview(result.post_mortem_path, max_chars=1800),
+            "runbook": _artifact_text_preview(result.runbook_path, max_chars=2600),
+        },
         "billing": result.billing,
     }
 
