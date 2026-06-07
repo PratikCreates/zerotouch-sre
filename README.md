@@ -12,7 +12,7 @@ The hosted project is the best first stop:
 
 [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
 
-It opens a full interactive website with an editable incident workbench. Click **Run checkout incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, and raw response.
+It opens a full interactive website with an editable incident workbench. Click **Run checkout incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, artifact previews, and raw response.
 
 ![Hosted health check](assets/screenshots/01-health-check.png)
 
@@ -32,7 +32,7 @@ The hosted URL opens as a product surface, not a blank API root.
 
 ![Hosted incident workbench](assets/screenshots/04-hosted-showcase.png)
 
-The guided incident review translates the raw agent response into an operator-readable incident summary.
+The guided incident review translates the raw agent response into an operator-readable incident summary with generated post-mortem and runbook previews.
 
 ![Guided incident review](assets/screenshots/05-visual-demo-result.png)
 
@@ -46,6 +46,7 @@ The guided incident review translates the raw agent response into an operator-re
    - root-cause diagnosis
    - simulated mitigation actions
    - billing guardrail snapshot
+   - post-mortem and runbook previews
    - raw response
 4. Edit the alert payload and click **Run edited alert** to prove the backend is live.
 5. Open `/docs` for a branded Swagger UI with examples and response schemas.
@@ -229,7 +230,7 @@ Each successful run writes review artifacts inside the running service environme
 - agent trace JSON
 - mitigation audit log
 
-The public API returns paths to those artifacts. The hosted page also shows the raw response so the generated outputs are easy to inspect during incident review.
+The public API returns paths to those artifacts. The hosted scenario page also renders safe post-mortem and runbook previews, then keeps the raw response available for deeper inspection.
 
 ## Design Notes
 
@@ -240,6 +241,7 @@ The UI emphasizes:
 - a clear first action
 - readable incident payload
 - visible agent phases
+- artifact previews for non-technical review
 - direct operational capability callouts
 - safe-action language
 - API docs as a secondary path
