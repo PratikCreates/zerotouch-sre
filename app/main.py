@@ -391,18 +391,27 @@ async def landing() -> str:
     .section-head h2 { margin: 0; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.04em; }
     .section-head p { margin: 0; max-width: 560px; color: var(--muted); line-height: 1.55; }
     .badge { display: inline-flex; align-items: center; gap: 8px; width: fit-content; border: 1px solid #3a6070; background: #0b171e; border-radius: 999px; padding: 7px 10px; color: var(--cyan); font-size: 12px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 14px; }
+    .story-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 16px; }
+    .story-card { border: 1px solid var(--line); background: #101a21; border-radius: 12px; padding: 18px; }
+    .story-card h3 { margin: 0 0 8px; font-size: 20px; }
+    .story-card p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .timeline { counter-reset: timeline; display: grid; gap: 10px; margin-top: 14px; }
+    .timeline li { counter-increment: timeline; list-style: none; display: grid; grid-template-columns: 44px 1fr; gap: 12px; border: 1px solid var(--line); background: #0b151b; border-radius: 10px; padding: 13px; }
+    .timeline li::before { content: counter(timeline); width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: var(--mint); color: #06120b; font-weight: 900; }
+    .timeline strong { display: block; color: #f4fbfb; margin-bottom: 3px; }
+    .timeline span { color: var(--muted); line-height: 1.45; }
     code { background: #071016; border: 1px solid #26323b; padding: 2px 6px; border-radius: 6px; color: #fff4ba; }
     footer { color: #8fa5ad; margin-top: 36px; font-size: 14px; }
     @media (max-width: 900px) {
       .hero, .try, .workbench { grid-template-columns: 1fr; }
-      .grid, .flow, .innovation-grid { grid-template-columns: 1fr 1fr; }
+      .grid, .flow, .innovation-grid, .story-grid { grid-template-columns: 1fr 1fr; }
       .summary { grid-template-columns: 1fr; }
       .section-head { display: block; }
     }
     @media (max-width: 560px) {
       main { width: min(100vw - 24px, 1180px); padding-top: 18px; }
       nav { align-items: flex-start; flex-direction: column; margin-bottom: 36px; }
-      .grid, .flow, .innovation-grid { grid-template-columns: 1fr; }
+      .grid, .flow, .innovation-grid, .story-grid { grid-template-columns: 1fr; }
       .navlinks { justify-content: flex-start; }
       h1 { font-size: 44px; }
     }
@@ -423,7 +432,7 @@ async def landing() -> str:
     <div class="hero">
       <div>
         <img class="hero-logo" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE autonomous incident response" />
-        <div class="eyebrow">Agentic incident operations</div>
+        <div class="eyebrow">Incident response automation</div>
         <h1>From alert to action plan in one request.</h1>
         <p class="lede">
           ZeroTouch SRE receives a production alert, gathers Dynatrace evidence when available,
@@ -501,10 +510,10 @@ async def landing() -> str:
         </div>
         <div class="statusline" id="statusline">Ready.</div>
       </div>
-      <div class="console" aria-label="Agent result">
+      <div class="console" aria-label="Incident result">
         <div class="console-head">
           <div class="lights"><span class="green"></span><span class="amber"></span><span class="red"></span></div>
-          <div class="console-title">agent result</div>
+          <div class="console-title">incident result</div>
         </div>
         <div class="result-grid" id="resultGrid" style="padding: 16px;">
           <div class="pill"><small>Status</small><strong id="resultStatus">Waiting</strong></div>
@@ -524,8 +533,39 @@ async def landing() -> str:
     </section>
 
     <div class="section-head">
+      <h2>Built for the first fifteen minutes</h2>
+      <p>ZeroTouch SRE is meant for the messy opening stretch of an incident, when a team needs a clear first pass before the full war room catches up.</p>
+    </div>
+
+    <section class="story-grid" aria-label="Who ZeroTouch SRE helps">
+      <article class="story-card">
+        <h3>For the on-call engineer</h3>
+        <p>Turns a noisy alert into a concise root-cause hypothesis, safe next actions, and a documented trail.</p>
+      </article>
+      <article class="story-card">
+        <h3>For the incident lead</h3>
+        <p>Creates a readable summary of impact, action rationale, and follow-up artifacts without waiting for manual note-taking.</p>
+      </article>
+      <article class="story-card">
+        <h3>For platform teams</h3>
+        <p>Shows how autonomous response can stay useful while remaining bounded by policy, simulation, and review.</p>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <h2>What happens on every run</h2>
+      <ol class="timeline">
+        <li><div><strong>Alert intake</strong><span>The service receives the incident payload through the website workbench or <code>POST /alert</code>.</span></div></li>
+        <li><div><strong>Evidence pass</strong><span>Telemetry is requested first, with the response clearly marking live or fallback mode.</span></div></li>
+        <li><div><strong>Root-cause pass</strong><span>The incident is summarized into a likely cause, confidence, and supporting evidence count.</span></div></li>
+        <li><div><strong>Policy pass</strong><span>Mitigation actions are checked against an allowlist before any simulated action is recorded.</span></div></li>
+        <li><div><strong>Review package</strong><span>The response includes a post-mortem path, runbook path, trace path, and cost guardrail snapshot.</span></div></li>
+      </ol>
+    </section>
+
+    <div class="section-head">
       <h2>Operational capabilities</h2>
-      <p>ZeroTouch SRE is designed as an operational agent, not a chatbot wrapper. It emphasizes clear execution, policy control, auditability, and real-world usefulness from the first run.</p>
+      <p>ZeroTouch SRE emphasizes clear execution, policy control, auditability, and real-world usefulness from the first run.</p>
     </div>
 
     <section class="innovation-grid" aria-label="Operational capabilities">

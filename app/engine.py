@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
 
+from app.action_executor import ALLOWED_ACTIONS
 from app.action_executor import ActionExecutor
 from app.adk_adapter import GeminiADKAdapter
 from app.billing_guard import BillingGuard, BudgetGuardError, guarded_llm_call
@@ -125,6 +126,25 @@ class ZeroTouchSREEngine:
 
     @guarded_llm_call(input_tokens=1400, output_tokens=450)
     async def _reason(self, perceived: dict[str, Any], telemetry: dict[str, Any]) -> dict[str, Any]:
+        deterministic = self._deterministic_reason(perceived, telemetry)
+        live = self._try_live_gemini_json(
+            phase="reason",
+            prompt=(
+                "You are the reasoning phase of an SRE incident agent. "
+                "Return only compact JSON with keys: root_cause, confidence, evidence_count. "
+                "Use the alert and telemetry facts exactly; do not invent credentials or private data.\n\n"
+                f"Alert:\n{json.dumps(perceived, indent=2)}\n\n"
+                f"Telemetry:\n{json.dumps(telemetry, indent=2)}"
+            ),
+            max_output_tokens=700,
+        )
+        if live:
+            normalized = self._normalize_live_reason(live, deterministic)
+            if normalized:
+                return normalized
+        return deterministic
+
+    def _deterministic_reason(self, perceived: dict[str, Any], telemetry: dict[str, Any]) -> dict[str, Any]:
         metrics = telemetry.get("metrics", {})
         deployments = telemetry.get("deployments", [])
         deployment_hint = deployments[0]["change"] if deployments else "no deployment change recorded"
@@ -139,6 +159,7 @@ class ZeroTouchSREEngine:
         return {
             "model": self.fast_model,
             "agent_runtime": self.adk_adapter.step_metadata("reason"),
+            "source": "deterministic-fallback",
             "root_cause": root_cause,
             "confidence": confidence,
             "evidence_count": len(telemetry.get("logs", [])),
@@ -146,6 +167,33 @@ class ZeroTouchSREEngine:
 
     @guarded_llm_call(input_tokens=900, output_tokens=350)
     async def _plan(
+        self,
+        perceived: dict[str, Any],
+        telemetry: dict[str, Any],
+        reasoning: dict[str, Any],
+    ) -> dict[str, Any]:
+        deterministic = self._deterministic_plan(perceived, telemetry, reasoning)
+        live = self._try_live_gemini_json(
+            phase="plan",
+            prompt=(
+                "You are the planning phase of an SRE incident agent. "
+                "Return only compact JSON with keys: strategy, risk, steps. "
+                "steps must be an array of safe actions. Allowed action values are: "
+                f"{', '.join(sorted(ALLOWED_ACTIONS))}. "
+                "Each step needs action, target, and reason. Do not include destructive actions.\n\n"
+                f"Alert:\n{json.dumps(perceived, indent=2)}\n\n"
+                f"Telemetry:\n{json.dumps(telemetry, indent=2)}\n\n"
+                f"Reasoning:\n{json.dumps(reasoning, indent=2)}"
+            ),
+            max_output_tokens=900,
+        )
+        if live:
+            normalized = self._normalize_live_plan(live, deterministic, perceived, reasoning)
+            if normalized:
+                return normalized
+        return deterministic
+
+    def _deterministic_plan(
         self,
         perceived: dict[str, Any],
         telemetry: dict[str, Any],
@@ -159,6 +207,7 @@ class ZeroTouchSREEngine:
         return {
             "model": self.fast_model,
             "agent_runtime": self.adk_adapter.step_metadata("plan"),
+            "source": "deterministic-fallback",
             "strategy": "stabilize then rollback",
             "steps": [
                 {"action": "scale_service", "target": service, "replicas": 8, "reason": "reduce CPU pressure immediately"},
@@ -352,6 +401,116 @@ class ZeroTouchSREEngine:
                 continue
         return None
 
+    def _try_live_gemini_json(self, *, phase: str, prompt: str, max_output_tokens: int) -> dict[str, Any] | None:
+        if os.getenv("ZEROTOUCH_DISABLE_LIVE", "").strip() == "1":
+            return None
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if not api_key:
+            return None
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.15,
+                "maxOutputTokens": max_output_tokens,
+                "responseMimeType": "application/json",
+            },
+        }
+        models = [self.fast_model, "gemini-1.5-flash", "gemini-1.5-pro"]
+        for model in models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            request = Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urlopen(request, timeout=8) as response:
+                    data = json.loads(response.read().decode("utf-8"))
+                text = _extract_gemini_text(data)
+                parsed = _extract_json_object(text)
+                if parsed:
+                    parsed["_live_model"] = model
+                    parsed["_live_phase"] = phase
+                    return parsed
+            except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, RuntimeError, ValueError):
+                continue
+        return None
+
+    def _normalize_live_reason(
+        self,
+        live: dict[str, Any],
+        fallback: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        root_cause = str(live.get("root_cause", "")).strip()
+        if len(root_cause) < 24:
+            return None
+        try:
+            confidence = float(live.get("confidence", fallback["confidence"]))
+        except (TypeError, ValueError):
+            confidence = float(fallback["confidence"])
+        confidence = max(0.0, min(1.0, confidence))
+        try:
+            evidence_count = int(live.get("evidence_count", fallback["evidence_count"]))
+        except (TypeError, ValueError):
+            evidence_count = int(fallback["evidence_count"])
+        return {
+            "model": str(live.get("_live_model") or self.fast_model),
+            "agent_runtime": {
+                **self.adk_adapter.step_metadata("reason"),
+                "live_model_attempted": True,
+                "live_model_used": True,
+            },
+            "source": "live-gemini-json",
+            "root_cause": root_cause,
+            "confidence": confidence,
+            "evidence_count": max(0, evidence_count),
+        }
+
+    def _normalize_live_plan(
+        self,
+        live: dict[str, Any],
+        fallback: dict[str, Any],
+        perceived: dict[str, Any],
+        reasoning: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        raw_steps = live.get("steps")
+        if not isinstance(raw_steps, list):
+            return None
+        steps: list[dict[str, Any]] = []
+        for item in raw_steps[:5]:
+            if not isinstance(item, dict):
+                continue
+            action = str(item.get("action", "")).strip()
+            target = str(item.get("target", "")).strip()
+            reason = str(item.get("reason", "")).strip()
+            if action not in ALLOWED_ACTIONS or not target or len(reason) < 8:
+                return None
+            step: dict[str, Any] = {"action": action, "target": target, "reason": reason}
+            if action == "rollback_release":
+                step["version"] = str(item.get("version") or fallback["steps"][1].get("version", "unknown"))
+            if action == "scale_service":
+                try:
+                    step["replicas"] = max(1, min(24, int(item.get("replicas", fallback["steps"][0].get("replicas", 8)))))
+                except (TypeError, ValueError):
+                    step["replicas"] = fallback["steps"][0].get("replicas", 8)
+            steps.append(step)
+        if not steps:
+            return None
+        return {
+            "model": str(live.get("_live_model") or self.fast_model),
+            "agent_runtime": {
+                **self.adk_adapter.step_metadata("plan"),
+                "live_model_attempted": True,
+                "live_model_used": True,
+            },
+            "source": "live-gemini-json",
+            "strategy": str(live.get("strategy") or fallback["strategy"])[:160],
+            "steps": steps,
+            "risk": str(live.get("risk") or fallback["risk"])[:80],
+            "reasoning_summary": str(reasoning.get("root_cause") or fallback.get("reasoning_summary") or perceived["title"]),
+        }
+
     def _render_post_mortem(
         self,
         perceived: dict[str, Any],
@@ -468,6 +627,25 @@ def _extract_gemini_text(data: dict[str, Any]) -> str:
     parts = content.get("parts", [])
     texts = [str(part.get("text", "")) for part in parts if isinstance(part, dict)]
     return "\n".join(text for text in texts if text).strip()
+
+
+def _extract_json_object(text: str) -> dict[str, Any] | None:
+    stripped = text.strip()
+    if not stripped:
+        return None
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if lines and lines[0].strip().startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        stripped = "\n".join(lines).strip()
+    start = stripped.find("{")
+    end = stripped.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        return None
+    parsed = json.loads(stripped[start : end + 1])
+    return parsed if isinstance(parsed, dict) else None
 
 
 async def run_sample_incident() -> EngineResult:

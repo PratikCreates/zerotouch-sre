@@ -36,6 +36,10 @@ The guided incident review translates the raw agent response into an operator-re
 
 ![Guided incident review](assets/screenshots/05-visual-demo-result.png)
 
+The API documentation is branded for the project and includes the same hosted scenario links, request schemas, and response examples.
+
+![API documentation](assets/screenshots/06-api-docs.png)
+
 ## The One-Minute Tour
 
 1. Open the hosted project URL.
@@ -111,7 +115,7 @@ flowchart LR
     G --> H["Write artifacts"]
 ```
 
-The agent attempts live provider evidence first. If live telemetry is unavailable, the deterministic Dynatrace-style fallback keeps the workflow testable while making fallback mode visible in the response.
+The engine attempts live provider evidence first. When a Gemini API key is configured, the reason and plan phases also attempt compact JSON generation before falling back to deterministic logic. If any live dependency is unavailable, the response still completes and marks fallback mode visibly.
 
 ## Public API
 
