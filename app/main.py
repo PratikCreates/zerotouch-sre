@@ -774,6 +774,8 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
         f"<li><strong>{escape(label)}</strong><span>{escape(str(path))}</span></li>"
         for label, path in artifact_list
     )
+    post_mortem_preview = _artifact_preview(payload.get("post_mortem_path"), max_chars=2600)
+    runbook_preview = _artifact_preview(payload.get("runbook_path"), max_chars=1800)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -829,10 +831,14 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
     ul.artifacts li {{ border:1px solid #31525f; border-radius:10px; padding:13px; background:#0b151b; }}
     ul.artifacts strong {{ display:block; color:var(--mint); margin-bottom:4px; }}
     ul.artifacts span {{ color:var(--muted); word-break:break-all; }}
+    .artifact-preview {{ display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:16px; }}
+    .artifact-card {{ border:1px solid #31525f; background:#0b151b; border-radius:10px; overflow:hidden; }}
+    .artifact-card h3 {{ margin:0; padding:13px 15px; color:var(--mint); border-bottom:1px solid #263f49; }}
+    .artifact-card pre {{ border-top:0; max-height:360px; white-space:pre-wrap; }}
     details {{ margin-top:16px; border:1px solid #31525f; border-radius:10px; background:#071016; overflow:hidden; }}
     summary {{ cursor:pointer; padding:14px 16px; color:var(--amber); font-weight:900; }}
     pre {{ margin:0; padding:16px; overflow:auto; color:#dff9e9; border-top:1px solid #263f49; font-size:13px; line-height:1.55; }}
-    @media (max-width: 900px) {{ .hero,.two,.split {{ grid-template-columns:1fr; }} .status,.flow {{ grid-template-columns:1fr 1fr; }} }}
+    @media (max-width: 900px) {{ .hero,.two,.split,.artifact-preview {{ grid-template-columns:1fr; }} .status,.flow {{ grid-template-columns:1fr 1fr; }} }}
     @media (max-width: 700px) {{ .before-after {{ grid-template-columns:1fr; }} }}
     @media (max-width: 560px) {{ main {{ width:min(100vw - 24px,1120px); }} nav {{ align-items:flex-start; flex-direction:column; }} .status,.flow {{ grid-template-columns:1fr; }} }}
   </style>
@@ -914,6 +920,16 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
     <section class="panel" style="margin-top:16px;">
       <h2>Generated artifacts</h2>
       <ul class="artifacts">{artifacts}</ul>
+      <div class="artifact-preview" aria-label="Generated artifact previews">
+        <article class="artifact-card">
+          <h3>Post-mortem preview</h3>
+          <pre>{post_mortem_preview}</pre>
+        </article>
+        <article class="artifact-card">
+          <h3>Runbook preview</h3>
+          <pre>{runbook_preview}</pre>
+        </article>
+      </div>
       <details>
         <summary>Show raw API response</summary>
         <pre>{raw_json}</pre>
@@ -922,6 +938,24 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
   </main>
 </body>
 </html>"""
+
+
+def _artifact_preview(path_value: Any, *, max_chars: int) -> str:
+    if not path_value:
+        return "Artifact was not generated for this run."
+    try:
+        path = Path(str(path_value))
+    except TypeError:
+        return "Artifact path could not be read."
+    if not path.exists() or not path.is_file():
+        return "Artifact was generated in the running service environment."
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return "Artifact preview is unavailable."
+    if len(text) > max_chars:
+        text = text[:max_chars].rstrip() + "\n\n[preview truncated]"
+    return escape(text)
 
 
 def _format_action_label(action: str) -> str:
