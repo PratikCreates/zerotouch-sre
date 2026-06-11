@@ -386,4 +386,4 @@ MIT. See [LICENSE](LICENSE).
 
 Built for the **Google Cloud Rapid Agent Hackathon — Dynatrace Track**
 
-[Pratik Shah](https://www.linkedin.com/in/pratikcreates) · [GitHub](https://github.com/PratikCreates/zerotouch-sre)
+[Pratik Shah](https://www.linkedin.com/in/pratikcreates)
