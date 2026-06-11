@@ -18,7 +18,21 @@ ZeroTouch SRE is a FastAPI backend deployed on Google Cloud Run that receives a 
 | **Scenario JSON** | [/scenario.json](https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json) |
 | **API docs** | [/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs) |
 
+## Product Walkthrough
+
+The hosted URL opens as a fully interactive operational surface, not a blank API root:
+
+### 🖥️ Interactive Incident Workbench (Split-Pane Dashboard)
+![Hosted incident workbench](assets/screenshots/cloud-01-landing.png)
+
+### 📊 Live Triage & Mitigation Action Plan
+![Live triage console results](assets/screenshots/cloud-02-incident-result.png)
+
+### 📂 Guided Scenario Review Page
+![Guided incident review page](assets/screenshots/cloud-03-scenario.png)
+
 ---
+
 
 ## Dynatrace Integration (Live & Confirmed)
 
@@ -137,6 +151,9 @@ flowchart LR
 | `app/billing_guard.py` | Token cost tracker + budget guard |
 | `app/adk_adapter.py` | Google ADK compatibility metadata |
 | `app/mock_dynatrace.py` | Deterministic fallback telemetry |
+
+### Operational Loop Lifecycle
+![Operational loop](assets/screenshots/03-architecture-loop.png)
 
 ---
 

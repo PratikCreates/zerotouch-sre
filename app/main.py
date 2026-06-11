@@ -394,20 +394,21 @@ async def landing() -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZeroTouch SRE</title>
+  <title>ZeroTouch SRE — Operational Workbench</title>
+  <link rel="icon" href="/assets/zerotouch_sre_logo.png" />
   <style>
     :root {
       color-scheme: dark;
-      --bg: #091116;
-      --panel: #101a21;
-      --panel-2: #14242c;
-      --ink: #f4fbfb;
-      --muted: #b7c9cf;
-      --line: #2d4651;
-      --mint: #b8ffd7;
-      --cyan: #83e7ff;
-      --amber: #ffd166;
-      --red: #ff7b72;
+      --bg: #0b1318;
+      --panel: #111e25;
+      --panel-2: #162831;
+      --ink: #f5fcfc;
+      --muted: #a3b8bf;
+      --line: #2e4753;
+      --mint: #34d399; /* Vibrant Mint */
+      --cyan: #38bdf8; /* Vibrant Cyan */
+      --amber: #fbbf24;
+      --red: #f87171;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
@@ -415,249 +416,550 @@ async def landing() -> str:
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 18% 12%, rgba(131, 231, 255, .16), transparent 28%),
-        radial-gradient(circle at 82% 8%, rgba(184, 255, 215, .12), transparent 24%),
-        linear-gradient(135deg, #081014, #0b151b 42%, #0f1715);
+        radial-gradient(circle at 10% 5%, rgba(56, 189, 248, 0.08), transparent 25%),
+        radial-gradient(circle at 90% 5%, rgba(52, 211, 153, 0.06), transparent 20%),
+        #080f12;
       color: var(--ink);
     }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size: 42px 42px;
-      mask-image: linear-gradient(to bottom, black, transparent 78%);
+    main {
+      width: min(1200px, calc(100vw - 24px));
+      margin: 0 auto;
+      padding: 16px 0 40px;
     }
-    a { color: inherit; }
-    main { width: min(1180px, calc(100vw - 36px)); margin: 0 auto; padding: 34px 0 52px; position: relative; }
-    nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 54px; }
-    .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: -.02em; }
-    .mark { width: 48px; height: 34px; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 0 32px rgba(131,231,255,.18); object-fit: cover; background: #071016; }
-    .navlinks { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-    .navlinks a, .button { text-decoration: none; border: 1px solid var(--line); background: rgba(16,26,33,.76); color: var(--ink); padding: 11px 14px; border-radius: 8px; font-weight: 800; font-size: 14px; }
-    .navlinks a:hover, .button:hover { border-color: var(--cyan); }
-    .hero { display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(360px, .97fr); gap: 28px; align-items: stretch; }
-    .hero-logo { width: min(520px, 100%); border: 1px solid #31525f; border-radius: 14px; margin: 0 0 22px; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
-    .eyebrow { color: var(--cyan); font-weight: 900; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; }
-    h1 { font-size: clamp(46px, 8vw, 92px); line-height: .9; margin: 14px 0 18px; letter-spacing: -0.055em; max-width: 760px; }
-    .lede { color: #dce9ec; font-size: clamp(18px, 2vw, 22px); line-height: 1.55; max-width: 780px; margin: 0; }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-    .button.primary { background: var(--mint); color: #06120b; border-color: var(--mint); box-shadow: 0 14px 42px rgba(184,255,215,.14); }
-    .button.secondary { background: #17242c; }
-    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 32px; max-width: 760px; }
-    .metric { border: 1px solid var(--line); background: rgba(16,26,33,.72); border-radius: 10px; padding: 16px; min-height: 106px; }
-    .metric b { display: block; font-size: 22px; margin-bottom: 8px; color: var(--mint); }
-    .metric span { color: var(--muted); line-height: 1.45; font-size: 14px; }
-    .console { border: 1px solid #335563; background: #081014; border-radius: 12px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.34); min-height: 100%; }
-    .console-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; border-bottom: 1px solid #243943; background: #111d24; }
-    .lights { display: flex; gap: 7px; }
-    .lights span { width: 10px; height: 10px; border-radius: 999px; display: block; }
-    .red { background: var(--red); } .amber { background: var(--amber); } .green { background: var(--mint); }
-    .console-title { color: var(--muted); font-size: 13px; font-weight: 800; }
-    pre { margin: 0; padding: 18px; overflow: auto; color: #dff9e9; font-size: 13px; line-height: 1.55; }
-    .token { color: var(--cyan); }
-    section { margin-top: 28px; }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    .innovation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .card { border: 1px solid var(--line); background: rgba(16,26,33,.78); border-radius: 10px; padding: 18px; }
-    .card h2, .card h3 { margin: 0 0 10px; letter-spacing: -.02em; }
-    .card p, .card li { color: var(--muted); line-height: 1.55; }
-    .card p { margin: 0; }
-    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-    .step { border: 1px solid #31525f; background: #10212a; border-radius: 10px; padding: 16px; min-height: 132px; position: relative; }
-    .step strong { display: block; color: var(--mint); margin-bottom: 8px; }
-    .step span { color: var(--muted); line-height: 1.45; font-size: 14px; }
-    .try { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .workbench { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 16px; align-items: stretch; }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      font-size: 18px;
+      text-decoration: none;
+    }
+    .mark {
+      width: 42px;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      object-fit: cover;
+      background: #071016;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      color: var(--mint);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--mint);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .navlinks { display: flex; gap: 8px; flex-wrap: wrap; }
+    .navlinks a, .button {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: rgba(17, 30, 37, 0.8);
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .navlinks a:hover, .button:hover {
+      border-color: var(--cyan);
+      background: rgba(22, 40, 49, 0.9);
+    }
+    .eyebrow {
+      color: var(--cyan);
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    .dashboard-intro {
+      margin-bottom: 16px;
+    }
+    .dashboard-intro h1 {
+      font-size: 26px;
+      margin: 4px 0 6px;
+      letter-spacing: -0.03em;
+      font-weight: 900;
+    }
+    .dashboard-intro p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .workbench-dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card h2 span.subtitle {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
     textarea {
       width: 100%;
-      min-height: 252px;
+      min-height: 200px;
       resize: vertical;
-      border: 1px solid #31525f;
-      background: #071016;
+      border: 1px solid var(--line);
+      background: #070e12;
       color: #e6fff0;
+      border-radius: 8px;
+      padding: 12px;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+    }
+    .buttonbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    button {
+      cursor: pointer;
+      font: inherit;
+    }
+    .button.primary {
+      background: var(--mint);
+      color: #030a07;
+      border-color: var(--mint);
+      box-shadow: 0 4px 14px rgba(52, 211, 153, 0.15);
+    }
+    .button.primary:hover {
+      background: #10b981;
+      border-color: #10b981;
+    }
+    .statusline {
+      color: var(--amber);
+      font-weight: 800;
+      margin-top: 8px;
+      font-size: 12px;
+      min-height: 18px;
+    }
+    /* Connect Panel Style */
+    .dt-connect {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(17, 30, 37, 0.8), rgba(22, 40, 49, 0.8));
       border-radius: 10px;
-      padding: 14px;
-      font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .dt-connect-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .dt-connect-header h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .dt-logo-mark {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, var(--cyan), var(--mint));
+      color: #080f12;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .dt-optional {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: #64808c;
+      border: 1px solid rgba(100, 128, 140, 0.3);
+      border-radius: 999px;
+      padding: 1px 6px;
+      margin-left: auto;
+    }
+    .dt-fields {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 8px;
+    }
+    .dt-field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #7aa0ae;
+      margin-bottom: 4px;
+    }
+    .dt-field input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #070e12;
+      color: #e6fff0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font: 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       outline: none;
     }
-    textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(131,231,255,.12); }
-    .buttonbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-    button { cursor: pointer; font: inherit; }
-    .result-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
-    .pill { border: 1px solid #31525f; background: #0b151b; border-radius: 10px; padding: 12px; }
-    .pill small { display: block; color: #8fb0ba; text-transform: uppercase; letter-spacing: .09em; font-weight: 900; font-size: 10px; margin-bottom: 6px; }
-    .pill strong { color: var(--mint); font-size: 15px; word-break: break-word; }
-    .statusline { color: var(--amber); font-weight: 900; margin: 12px 0 0; min-height: 22px; }
-    .actions-list { margin: 12px 0 0; padding-left: 18px; color: #d9e8eb; line-height: 1.55; }
-    .mini-artifacts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .mini-artifact { border: 1px solid #31525f; background: #071016; border-radius: 10px; overflow: hidden; }
-    .mini-artifact h3 { margin: 0; padding: 10px 12px; border-bottom: 1px solid #263f49; color: var(--mint); font-size: 14px; }
-    .mini-artifact pre { margin: 0; padding: 12px; max-height: 190px; overflow: auto; color: #dff9e9; white-space: pre-wrap; font-size: 12px; line-height: 1.45; }
-    .raw-output { max-height: 280px; border-top: 1px solid #243943; margin-top: 14px; }
-    .hidden { display: none; }
-    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 34px 0 14px; }
-    .section-head h2 { margin: 0; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.04em; }
-    .section-head p { margin: 0; max-width: 560px; color: var(--muted); line-height: 1.55; }
-    .badge { display: inline-flex; align-items: center; gap: 8px; width: fit-content; border: 1px solid #3a6070; background: #0b171e; border-radius: 999px; padding: 7px 10px; color: var(--cyan); font-size: 12px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 14px; }
-    .story-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 16px; }
-    .story-card { border: 1px solid var(--line); background: #101a21; border-radius: 12px; padding: 18px; }
-    .story-card h3 { margin: 0 0 8px; font-size: 20px; }
-    .story-card p { margin: 0; color: var(--muted); line-height: 1.55; }
-    .timeline { counter-reset: timeline; display: grid; gap: 10px; margin-top: 14px; }
-    .timeline li { counter-increment: timeline; list-style: none; display: grid; grid-template-columns: 44px 1fr; gap: 12px; border: 1px solid var(--line); background: #0b151b; border-radius: 10px; padding: 13px; }
-    .timeline li::before { content: counter(timeline); width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: var(--mint); color: #06120b; font-weight: 900; }
-    .timeline strong { display: block; color: #f4fbfb; margin-bottom: 3px; }
-    .timeline span { color: var(--muted); line-height: 1.45; }
-    code { background: #071016; border: 1px solid #26323b; padding: 2px 6px; border-radius: 6px; color: #fff4ba; }
-    footer { color: #8fa5ad; margin-top: 36px; font-size: 14px; }
-    /* ── Dynatrace Connect Panel ── */
-    .dt-connect { border: 1px solid #2a4a5a; background: linear-gradient(135deg,#0c1a22,#0f1e28); border-radius: 14px; padding: 22px 24px; margin-top: 28px; }
-    .dt-connect-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-    .dt-connect-header h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
-    .dt-logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg,#83e7ff,#b8ffd7); border-radius: 6px; display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
-    .dt-optional { font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #5a8090; border: 1px solid #2a4a5a; border-radius: 999px; padding: 3px 8px; margin-left: auto; }
-    .dt-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .dt-field label { display: block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .09em; color: #7aa0ae; margin-bottom: 6px; }
-    .dt-field input { width: 100%; border: 1px solid #2d4651; background: #071016; color: #e6fff0; border-radius: 8px; padding: 10px 12px; font: 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; outline: none; transition: border-color .15s; }
-    .dt-field input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(131,231,255,.1); }
-    .dt-field input::placeholder { color: #3a5562; }
-    .dt-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
-    .dt-status { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; min-height: 20px; }
-    .dt-status.idle { color: #5a8090; }
+    .dt-field input:focus { border-color: var(--cyan); }
+    .dt-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .dt-status {
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dt-status.idle { color: #64808c; }
     .dt-status.checking { color: var(--amber); }
     .dt-status.ok { color: var(--mint); }
-    .dt-status.err { color: #ff8f8f; }
-    .dt-status .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
-    .dt-status.checking .dot { animation: pulse 1s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-    .dt-hint { color: #4a7080; font-size: 12px; line-height: 1.5; margin-top: 10px; }
-    .dt-hint code { font-size: 11px; }
-    .dt-scopes { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-    .dt-scope-tag { font-size: 10px; font-weight: 800; background: #0e2230; border: 1px solid #1e4060; color: var(--cyan); border-radius: 4px; padding: 2px 7px; letter-spacing: .04em; }
-    .dt-scope-tag.missing { color: #ff8f8f; border-color: #4a2020; background: #1a0e0e; }
-    @media (max-width: 900px) {
-      .hero, .try, .workbench { grid-template-columns: 1fr; }
-      .grid, .flow, .innovation-grid, .story-grid { grid-template-columns: 1fr 1fr; }
-      .mini-artifacts { grid-template-columns: 1fr; }
-      .summary { grid-template-columns: 1fr; }
-      .section-head { display: block; }
-      .dt-fields { grid-template-columns: 1fr; }
+    .dt-status.err { color: #f87171; }
+    .dt-status .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+    .dt-hint {
+      color: #5d7e8b;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 8px;
     }
-    @media (max-width: 560px) {
-      main { width: min(100vw - 24px, 1180px); padding-top: 18px; }
-      nav { align-items: flex-start; flex-direction: column; margin-bottom: 36px; }
-      .grid, .flow, .innovation-grid, .story-grid { grid-template-columns: 1fr; }
-      .navlinks { justify-content: flex-start; }
-      h1 { font-size: 44px; }
+    .dt-scopes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .dt-scope-tag {
+      font-size: 9px;
+      font-weight: 800;
+      background: #0d202d;
+      border: 1px solid #1c3b57;
+      color: var(--cyan);
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+    .dt-scope-tag.missing {
+      color: #f87171;
+      border-color: #501d1d;
+      background: #1c0c0c;
+    }
+    /* Console Result Style */
+    .console {
+      border: 1px solid var(--line);
+      background: #070e12;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.22);
+      min-height: 100%;
+    }
+    .console-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #111d24;
+    }
+    .lights { display: flex; gap: 5px; }
+    .lights span { width: 8px; height: 8px; border-radius: 999px; display: block; }
+    .lights .red { background: var(--red); }
+    .lights .amber { background: var(--amber); }
+    .lights .green { background: var(--mint); }
+    .console-title { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 12px 14px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(17, 30, 37, 0.6);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .pill small {
+      display: block;
+      color: #7ba2af;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 900;
+      font-size: 9px;
+      margin-bottom: 4px;
+    }
+    .pill strong {
+      color: var(--mint);
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .pill.large {
+      grid-column: span 4;
+    }
+    .actions-list {
+      margin: 8px 0 0;
+      padding-left: 16px;
+      color: #dceef2;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .mini-artifacts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .mini-artifact {
+      border: 1px solid var(--line);
+      background: #081014;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mini-artifact h3 {
+      margin: 0;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--mint);
+      font-size: 12px;
+    }
+    .mini-artifact pre {
+      margin: 0;
+      padding: 8px 10px;
+      max-height: 160px;
+      overflow: auto;
+      color: #e2fceb;
+      white-space: pre-wrap;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .raw-output {
+      max-height: 240px;
+      border-top: 1px solid var(--line);
+      margin: 10px 0 0;
+      padding: 12px;
+      background: #050b0e;
+      overflow: auto;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #c9eede;
+    }
+    .hidden { display: none; }
+    /* Horizontal flow at bottom */
+    .flow-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--cyan);
+      margin: 24px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .step {
+      border: 1px solid var(--line);
+      background: rgba(16, 26, 33, 0.4);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 100px;
+    }
+    .step strong {
+      display: block;
+      color: var(--mint);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .step span {
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 12px;
+    }
+    /* Info panels below fold */
+    .section-head {
+      margin-top: 30px;
+      margin-bottom: 12px;
+    }
+    .section-head h2 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      letter-spacing: -.02em;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .innovation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .badge {
+      display: inline-flex;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--cyan);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .innovation-grid .card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .innovation-grid .card p {
+      font-size: 12px;
+      line-height: 1.4;
+      margin: 0;
+    }
+    footer {
+      color: #64808c;
+      margin-top: 30px;
+      font-size: 12px;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+    @media (max-width: 900px) {
+      .workbench-dashboard { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .innovation-grid { grid-template-columns: 1fr; }
+      .dt-fields { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: 1fr 1fr; }
+      .pill.large { grid-column: span 2; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
     }
   </style>
 </head>
 <body>
   <main>
     <nav>
-      <div class="brand"><img class="mark" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" /><span>ZeroTouch SRE</span></div>
+      <a class="brand" href="/">
+        <img class="mark" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE logo" />
+        <span>ZeroTouch SRE</span>
+        <div class="status-pill"><span class="status-dot"></span><span>Active System</span></div>
+      </a>
       <div class="navlinks">
-        <a href="/scenario">Scenario</a>
-        <a href="/docs">API Docs</a>
+        <a href="/scenario">Scenario Review</a>
+        <a href="/docs">Swagger Docs</a>
         <a href="/health">Health</a>
         <a href="https://github.com/PratikCreates/zerotouch-sre">GitHub</a>
       </div>
     </nav>
 
-    <div class="hero">
+    <div class="dashboard-intro">
+      <h1>Operational Incident Response Workbench</h1>
+      <p>
+        ZeroTouch SRE automates the first fifteen minutes of production outages. 
+        It ingests webhooks, pulls log evidence from Dynatrace Grail, runs Vertex AI reasoning, checks policies, and drafts audit/post-mortem artifacts in under 5 seconds.
+      </p>
+    </div>
+
+    <div class="workbench-dashboard">
+      <!-- Left Column: Inputs -->
       <div>
-        <img class="hero-logo" src="/assets/zerotouch_sre_logo.png" alt="ZeroTouch SRE autonomous incident response" />
-        <div class="eyebrow">Incident response automation</div>
-        <h1>From alert to action plan in one request.</h1>
-        <p class="lede">
-          ZeroTouch SRE receives a production alert, gathers Dynatrace evidence when available,
-          reasons through root cause, simulates approved mitigations, and returns a post-mortem,
-          runbook, trace, and budget snapshot.
-        </p>
-        <div class="actions">
-          <a class="button primary" href="/scenario">Run checkout scenario</a>
-          <a class="button secondary" href="/docs">API workbench</a>
-          <a class="button secondary" href="https://github.com/PratikCreates/zerotouch-sre">Review source</a>
+        <!-- Dynatrace Connect Panel -->
+        <div class="dt-connect" id="dtConnect" aria-label="Connect your Dynatrace environment">
+          <div class="dt-connect-header">
+            <div class="dt-logo-mark" aria-hidden="true">⬡</div>
+            <h2>Connect Dynatrace Tenant</h2>
+            <span class="dt-optional">Optional Connection</span>
+          </div>
+          <div class="dt-fields">
+            <div class="dt-field">
+              <label for="dtUrl">Environment URL</label>
+              <input id="dtUrl" type="url" placeholder="https://xyz12345.live.dynatrace.com" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="dt-field">
+              <label for="dtToken">API Ingest Token</label>
+              <input id="dtToken" type="password" placeholder="dt0s16.xxxxxxxxxxxx…" autocomplete="off" spellcheck="false" />
+            </div>
+          </div>
+          <div class="dt-actions">
+            <button class="button secondary" id="dtTestBtn" type="button" style="padding: 6px 12px; font-size:12px;">Test connection</button>
+            <div class="dt-status idle" id="dtStatus">
+              <span class="dot"></span>
+              <span id="dtStatusText" style="font-size:11px;">Disconnected</span>
+            </div>
+          </div>
+          <div class="dt-scopes hidden" id="dtScopeList"></div>
+          <div class="dt-hint">Enter your Dynatrace tenant to enable bidirectional OpenPipeline event ingestion and log search.</div>
         </div>
-        <div class="summary">
-          <div class="metric"><b>1 request</b><span>Webhook in, operational artifacts out.</span></div>
-          <div class="metric"><b>Safe by design</b><span>Only allowlisted actions are simulated.</span></div>
-          <div class="metric"><b>Auditable</b><span>Every stage is written to an agent trace.</span></div>
-        </div>
-      </div>
-      <div class="console" aria-label="Checkout outage payload">
-        <div class="console-head">
-          <div class="lights"><span class="red"></span><span class="amber"></span><span class="green"></span></div>
-          <div class="console-title">checkout_alert.json</div>
-        </div>
-        <pre>{
-  <span class="token">"incident_id"</span>: "INC-CHECKOUT-20260607",
-  <span class="token">"service"</span>: "checkout-api",
-  <span class="token">"severity"</span>: "critical",
-  <span class="token">"title"</span>: "Checkout API CPU spike and HTTP 500 surge",
-  <span class="token">"details"</span>: {
-    <span class="token">"region"</span>: "us-central1",
-    <span class="token">"slo"</span>: "checkout-availability",
-    <span class="token">"trigger"</span>: "HTTP 500 rate above 5 percent for 10 minutes"
-  }
-}</pre>
-      </div>
-    </div>
 
-    <section class="flow" aria-label="Agent workflow">
-      <div class="step"><strong>Perceive</strong><span>Normalize alert fields into an incident record.</span></div>
-      <div class="step"><strong>Retrieve</strong><span>Attempt Dynatrace evidence, then fall back deterministically if needed.</span></div>
-      <div class="step"><strong>Reason</strong><span>Identify likely root cause with confidence and evidence count.</span></div>
-      <div class="step"><strong>Plan</strong><span>Build a mitigation sequence that can be checked against policy.</span></div>
-      <div class="step"><strong>Execute</strong><span>Simulate approved actions and generate review artifacts.</span></div>
-    </section>
-
-    <section class="try">
-      <div class="card">
-        <h2>Checkout scenario</h2>
-        <p>Run the included checkout outage through the full response loop and inspect the operational outcome directly on this page.</p>
-      </div>
-      <div class="card">
-        <h2>Custom alert path</h2>
-        <p>Edit the alert JSON, run it, and compare root cause, telemetry mode, safe actions, generated artifacts, and budget guardrails.</p>
-      </div>
-    </section>
-
-    <!-- ── Dynatrace Connect Panel ── -->
-    <div class="dt-connect" id="dtConnect" aria-label="Connect your Dynatrace environment">
-      <div class="dt-connect-header">
-        <div class="dt-logo-mark" aria-hidden="true">⬡</div>
-        <h2>Connect your Dynatrace</h2>
-        <span class="dt-optional">Optional</span>
-      </div>
-      <div class="dt-fields">
-        <div class="dt-field">
-          <label for="dtUrl">Environment URL</label>
-          <input id="dtUrl" type="url" placeholder="https://xyz12345.live.dynatrace.com" autocomplete="off" spellcheck="false" />
-        </div>
-        <div class="dt-field">
-          <label for="dtToken">API Token</label>
-          <input id="dtToken" type="password" placeholder="dt0s16.xxxxxxxxxxxx…" autocomplete="off" spellcheck="false" />
-        </div>
-      </div>
-      <div class="dt-actions">
-        <button class="button secondary" id="dtTestBtn" type="button">Test connection</button>
-        <div class="dt-status idle" id="dtStatus">
-          <span class="dot"></span>
-          <span id="dtStatusText">Enter your environment URL and token</span>
-        </div>
-      </div>
-      <div class="dt-hint">Needs <code>openpipeline:events:ingest</code> scope. When connected, ZeroTouch SRE pushes events to <em>your</em> Dynatrace and queries your logs — proving live bidirectional integration.</div>
-      <div class="dt-scopes hidden" id="dtScopeList"></div>
-    </div>
-
-    <section class="workbench" aria-label="Interactive incident workbench">
-      <div class="card">
-        <h2>Incident workbench</h2>
-        <p>Run the checkout outage scenario or edit the payload before sending it to <code>POST /alert</code>.</p>
-        <textarea id="payload" spellcheck="false">{
+        <!-- Workbench Trigger Card -->
+        <div class="card">
+          <h2>
+            <span>Alert Webhook Simulation</span>
+            <span class="subtitle">POST /alert</span>
+          </h2>
+          <p>Edit the raw JSON payload below and trigger the autonomous triage loop.</p>
+          <textarea id="payload" spellcheck="false">{
   "incident_id": "INC-CHECKOUT-20260607",
   "service": "checkout-api",
   "severity": "critical",
@@ -668,30 +970,33 @@ async def landing() -> str:
     "trigger": "HTTP 500 rate above 5 percent for 10 minutes"
   }
 }</textarea>
-        <div class="buttonbar">
-          <button class="button primary" id="runDemo" type="button">Run checkout incident</button>
-          <button class="button secondary" id="runCustom" type="button">Run edited alert</button>
-          <button class="button secondary" id="resetPayload" type="button">Reset payload</button>
+          <div class="buttonbar">
+            <button class="button primary" id="runDemo" type="button">Run checkout incident</button>
+            <button class="button secondary" id="runCustom" type="button">Run edited alert</button>
+            <button class="button secondary" id="resetPayload" type="button">Reset payload</button>
+          </div>
+          <div class="statusline" id="statusline">System ready. Select a scenario to run.</div>
         </div>
-        <div class="statusline" id="statusline">Ready.</div>
       </div>
-      <div class="console" aria-label="Incident result">
+
+      <!-- Right Column: Console Outputs -->
+      <div class="console" aria-label="Incident result console">
         <div class="console-head">
           <div class="lights"><span class="green"></span><span class="amber"></span><span class="red"></span></div>
-          <div class="console-title">incident result</div>
+          <div class="console-title">TRIAGE ENGINE RESULTS</div>
         </div>
-        <div class="result-grid" id="resultGrid" style="padding: 16px;">
-          <div class="pill"><small>Status</small><strong id="resultStatus">Waiting</strong></div>
-          <div class="pill"><small>Telemetry</small><strong id="resultTelemetry">Not run</strong></div>
-          <div class="pill"><small>Incident</small><strong id="resultIncident">-</strong></div>
-          <div class="pill"><small>Budget</small><strong id="resultBudget">-</strong></div>
+        <div class="result-grid" id="resultGrid">
+          <div class="pill"><small>Triage Status</small><strong id="resultStatus">Waiting</strong></div>
+          <div class="pill"><small>Telemetry Mode</small><strong id="resultTelemetry">Not Run</strong></div>
+          <div class="pill"><small>Incident ID</small><strong id="resultIncident">-</strong></div>
+          <div class="pill"><small>Gemini Cost</small><strong id="resultBudget">-</strong></div>
+          <div class="pill large"><small>Root Cause Diagnosis</small><strong id="resultCause">Triage not executed yet. Click "Run checkout incident" to execute the loop.</strong></div>
         </div>
-        <div style="padding: 0 16px 16px;">
-          <div class="pill">
-            <small>Root cause</small>
-            <strong id="resultCause">Run an incident to generate a diagnosis.</strong>
-          </div>
-          <ul class="actions-list" id="resultActions"></ul>
+        <div style="padding: 0 14px 14px;">
+          <small style="color: #7ba2af; text-transform: uppercase; font-size: 9px; font-weight: 950; display: block; margin-bottom: 6px;">Simulated Mitigation Actions</small>
+          <ul class="actions-list" id="resultActions" style="margin: 0; padding-left: 18px;">
+            <li style="color: var(--muted); list-style-type: square;">Triage loop plans allowlisted mitigations dynamically.</li>
+          </ul>
           <div class="mini-artifacts hidden" id="artifactPreviews" aria-label="Generated artifact previews">
             <article class="mini-artifact">
               <h3>Post-mortem preview</h3>
@@ -705,86 +1010,42 @@ async def landing() -> str:
         </div>
         <pre class="raw-output hidden" id="rawOutput"></pre>
       </div>
-    </section>
-
-    <div class="section-head">
-      <h2>Built for the first fifteen minutes</h2>
-      <p>ZeroTouch SRE is meant for the messy opening stretch of an incident, when a team needs a clear first pass before the full war room catches up.</p>
     </div>
 
-    <section class="story-grid" aria-label="Who ZeroTouch SRE helps">
-      <article class="story-card">
-        <h3>For the on-call engineer</h3>
-        <p>Turns a noisy alert into a concise root-cause hypothesis, safe next actions, and a documented trail.</p>
-      </article>
-      <article class="story-card">
-        <h3>For the incident lead</h3>
-        <p>Creates a readable summary of impact, action rationale, and follow-up artifacts without waiting for manual note-taking.</p>
-      </article>
-      <article class="story-card">
-        <h3>For platform teams</h3>
-        <p>Shows how autonomous response can stay useful while remaining bounded by policy, simulation, and review.</p>
-      </article>
-    </section>
-
-    <section class="card" style="margin-top:16px;">
-      <h2>What happens on every run</h2>
-      <ol class="timeline">
-        <li><div><strong>Alert intake</strong><span>The service receives the incident payload through the website workbench or <code>POST /alert</code>.</span></div></li>
-        <li><div><strong>Evidence pass</strong><span>Telemetry is requested first, with the response clearly marking live or fallback mode.</span></div></li>
-        <li><div><strong>Root-cause pass</strong><span>The incident is summarized into a likely cause, confidence, and supporting evidence count.</span></div></li>
-        <li><div><strong>Policy pass</strong><span>Mitigation actions are checked against an allowlist before any simulated action is recorded.</span></div></li>
-        <li><div><strong>Review package</strong><span>The response includes a post-mortem path, runbook path, trace path, and cost guardrail snapshot.</span></div></li>
-      </ol>
+    <div class="flow-title">Autonomous Operational Loop</div>
+    <section class="flow" aria-label="Agent workflow">
+      <div class="step"><strong>1. Perceive</strong><span>Normalize incident webhook alert.</span></div>
+      <div class="step"><strong>2. Retrieve</strong><span>Fetch live Grail logs via Dynatrace APIs.</span></div>
+      <div class="step"><strong>3. Reason</strong><span>Analyze logs to determine root cause.</span></div>
+      <div class="step"><strong>4. Plan</strong><span>Formulate allowlisted safety actions.</span></div>
+      <div class="step"><strong>5. Execute</strong><span>Simulate playbooks and write artifacts.</span></div>
     </section>
 
     <div class="section-head">
       <h2>Operational capabilities</h2>
-      <p>ZeroTouch SRE emphasizes clear execution, policy control, auditability, and real-world usefulness from the first run.</p>
+      <p>Built to be useful, safe, and cost-controlled for on-call engineers.</p>
     </div>
 
     <section class="innovation-grid" aria-label="Operational capabilities">
       <div class="card">
         <span class="badge">Action over chat</span>
         <h3>Webhook-to-artifact loop</h3>
-        <p>A single alert request produces a diagnosis, mitigation plan, safe execution record, post-mortem path, runbook path, and trace path.</p>
+        <p>A single webhook request produces a diagnosis, mitigation plans, post-mortem markdown, and JSON runbook.</p>
       </div>
       <div class="card">
-        <span class="badge">Partner signal</span>
+        <span class="badge">Bidirectional Observability</span>
         <h3>Telemetry-first reasoning</h3>
-        <p>The agent attempts Dynatrace evidence before planning. If live telemetry is unavailable, it records a sanitized fallback note and still completes the workflow.</p>
+        <p>Queries Grail logs dynamically and pushes audit events back into your Dynatrace tenant using OpenPipeline.</p>
       </div>
       <div class="card">
         <span class="badge">Safe autonomy</span>
-        <h3>Policy-gated mitigation</h3>
-        <p>Only approved simulated actions can run. Destructive production writes are blocked by design, keeping operators in control.</p>
+        <h3>Allowlist policy gates</h3>
+        <p>All production mitigations are simulation-only by default. Destructive actions require explicit operator approval.</p>
       </div>
-      <div class="card">
-        <span class="badge">Audit ready</span>
-        <h3>Traceable decisions</h3>
-        <p>Each phase is captured: perceive, retrieve telemetry, reason, plan, execute, and synthesize. This makes the agent reviewable after the incident.</p>
-      </div>
-      <div class="card">
-        <span class="badge">Cost aware</span>
-        <h3>Budget guardrails</h3>
-        <p>Every simulated model step records token usage and estimated INR burn, with a hard guardrail for excessive loops.</p>
-      </div>
-      <div class="card">
-        <span class="badge">Cloud native</span>
-        <h3>Hosted operations API</h3>
-        <p>The service is containerized and deployed on Cloud Run with secret-backed provider configuration and public operational routes.</p>
-      </div>
-    </section>
-
-    <section class="grid" aria-label="Platform summary">
-      <div class="card"><h3>Google Cloud ready</h3><p>Containerized FastAPI service deployed on Cloud Run with secret-backed provider configuration.</p></div>
-      <div class="card"><h3>Partner-aware</h3><p>Dynatrace evidence is attempted first; fallback mode is explicit and auditable in the response.</p></div>
-      <div class="card"><h3>Operator control</h3><p>Production-affecting changes are not performed blindly. The service simulates and records policy-approved actions.</p></div>
-      <div class="card"><h3>Useful artifacts</h3><p>Each run produces a post-mortem, runbook, mitigation audit trail, and trace for review.</p></div>
     </section>
 
     <footer>
-      Hosted on Google Cloud Run. Source: <a href="https://github.com/PratikCreates/zerotouch-sre">github.com/PratikCreates/zerotouch-sre</a>
+      ZeroTouch SRE • Deployed on Google Cloud Run • Source: <a href="https://github.com/PratikCreates/zerotouch-sre" style="color: var(--cyan);">github.com/PratikCreates/zerotouch-sre</a>
     </footer>
   </main>
   <script>
