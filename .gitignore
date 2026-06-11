@@ -2,8 +2,6 @@
 PROMPT.txt
 .venv/
 _private/
-scripts/
-tests/
 __pycache__/
 .pytest_cache/
 reports/

@@ -31,6 +31,7 @@ class EngineResult:
     telemetry_mode: str
     telemetry_source: str
     telemetry_error: str | None
+    telemetry_environment_url: str
     post_mortem_path: str
     runbook_path: str
     trace_path: str
@@ -59,7 +60,12 @@ class ZeroTouchSREEngine:
 
     async def handle_alert(self, alert: dict[str, Any]) -> EngineResult:
         perceived = self._perceive(alert)
-        telemetry_result = await self.mcp_client.query_alert_context(perceived)
+        # Judge-mode: if the caller provided their own DT credentials, pass them through
+        _dt_url = alert.get("dt_url") or None
+        _dt_token = alert.get("dt_token") or None
+        telemetry_result = await self.mcp_client.query_alert_context(
+            perceived, override_url=_dt_url, override_token=_dt_token
+        )
         reasoning = await self._reason(perceived, telemetry_result.telemetry)
         plan = await self._plan(perceived, telemetry_result.telemetry, reasoning)
         mitigation = self._execute_mitigation(plan)
@@ -104,6 +110,9 @@ class ZeroTouchSREEngine:
             telemetry_mode=telemetry_result.mode,
             telemetry_source=str(telemetry_result.telemetry.get("source", "unknown")),
             telemetry_error=telemetry_result.error,
+            telemetry_environment_url=str(
+                telemetry_result.telemetry.get("dynatrace", {}).get("environment_url", "")
+            ),
             post_mortem_path=str(post_mortem_path),
             runbook_path=str(runbook_path),
             trace_path=str(trace_path),

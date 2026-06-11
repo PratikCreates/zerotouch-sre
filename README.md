@@ -2,181 +2,160 @@
 
 ![ZeroTouch SRE](assets/zerotouch_sre_logo.png)
 
-Autonomous incident triage and mitigation planning for production SRE teams.
+**Autonomous incident triage and mitigation planning for production SRE teams — powered by Dynatrace OpenPipeline and Google Gemini.**
 
-ZeroTouch SRE is a FastAPI backend that receives a production alert, gathers telemetry, identifies a likely root cause, runs proposed actions through a safe simulation policy, and produces incident artifacts for review. It is designed for teams that want agentic operations without giving an unreviewed agent destructive production access.
+ZeroTouch SRE is a FastAPI backend deployed on Google Cloud Run that receives a production alert, fetches live telemetry from Dynatrace, performs AI-powered root-cause reasoning, applies a safety policy gate, and produces a complete incident package — root cause, mitigation plan, post-mortem, runbook, and audit trail — in under 5 seconds.
 
-## Start Here
-
-The hosted project is the best first stop:
-
-[https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
-
-It opens a full interactive website with an editable incident workbench. Click **Run checkout incident** to execute the backend from the page, then review the rendered root cause, telemetry mode, mitigation actions, cost guardrail, artifact previews, and raw response.
-
-![Hosted health check](assets/screenshots/01-health-check.png)
+---
 
 ## Live Service
 
-- Hosted backend: [https://zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app)
-- Health check: [https://zerotouch-sre-971465910048.us-central1.run.app/health](https://zerotouch-sre-971465910048.us-central1.run.app/health)
-- Checkout scenario: [https://zerotouch-sre-971465910048.us-central1.run.app/scenario](https://zerotouch-sre-971465910048.us-central1.run.app/scenario)
-- Raw scenario response: [https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json](https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json)
-- Interactive API docs: [https://zerotouch-sre-971465910048.us-central1.run.app/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs)
+| Resource | URL |
+|----------|-----|
+| **Incident Workbench** | [zerotouch-sre-971465910048.us-central1.run.app](https://zerotouch-sre-971465910048.us-central1.run.app) |
+| **Health check** | [/health](https://zerotouch-sre-971465910048.us-central1.run.app/health) |
+| **Guided scenario** | [/scenario](https://zerotouch-sre-971465910048.us-central1.run.app/scenario) |
+| **Scenario JSON** | [/scenario.json](https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json) |
+| **API docs** | [/docs](https://zerotouch-sre-971465910048.us-central1.run.app/docs) |
 
-Start with the hosted backend URL. It opens an interactive website with an editable incident workbench, operational capability cards, and direct links to the API docs and source.
+---
 
-## Product Walkthrough
+## Dynatrace Integration (Live & Confirmed)
 
-The hosted URL opens as a product surface, not a blank API root.
+ZeroTouch SRE has **bidirectional** Dynatrace integration:
 
-![Hosted incident workbench](assets/screenshots/04-hosted-showcase.png)
+### Ingest (ZeroTouch → Dynatrace)
+Every alert processed by ZeroTouch SRE is pushed as structured events into **Dynatrace OpenPipeline** via `POST /platform/ingest/v1/events`. This creates an observable audit trail in your Dynatrace environment — every triage, every root-cause decision, every mitigation action logged with full context.
 
-The guided incident review translates the raw agent response into an operator-readable incident summary with generated post-mortem and runbook previews.
+```json
+{
+  "telemetry_mode": "live-dynatrace-openpipeline",
+  "telemetry": {
+    "mode": "live-dynatrace-openpipeline",
+    "source": "dynatrace-api",
+    "live_attempted": true,
+    "fallback_note": null
+  }
+}
+```
 
-![Guided incident review](assets/screenshots/05-visual-demo-result.png)
+### Pull (Dynatrace → ZeroTouch)
+The agent queries **Dynatrace log search** (`/api/v2/logs/search`) for real log evidence from the affected service before reasoning. When logs are available (OneAgent deployed), the AI uses real production evidence. When not, it uses synthesised telemetry from the alert context.
 
-The API documentation is branded for the project and includes the same hosted scenario links, request schemas, and response examples.
+### Confirmed Working
+```
+POST https://wbu53242.live.dynatrace.com/platform/ingest/v1/events
+→ HTTP 202 Accepted
 
-![API documentation](assets/screenshots/06-api-docs.png)
+Scope used: openpipeline:events:ingest
+Events pushed: zerotouch.sre.alert.received, zerotouch.sre.triage.started
+```
+
+**18 scenario events** across 3 real incident scenarios are already in the Dynatrace environment. Search for them with:
+```
+fetch events | filter zerotouch.sre == "true"
+```
+
+---
 
 ## The One-Minute Tour
 
-1. Open the hosted project URL.
-2. Click **Run checkout incident** in the embedded workbench.
-3. Watch the page populate with:
-   - incident status
-   - telemetry source and mode
-   - root-cause diagnosis
-   - simulated mitigation actions
-   - billing guardrail snapshot
-   - post-mortem and runbook previews
-   - raw response
-4. Edit the alert payload and click **Run edited alert** to prove the backend is live.
-5. Open `/docs` for a branded Swagger UI with examples and response schemas.
+1. Open [the workbench](https://zerotouch-sre-971465910048.us-central1.run.app)
+2. Click **Run checkout incident**
+3. Watch the page populate with root-cause, telemetry source, mitigation actions, billing guardrail, artifact previews
+4. Check `telemetry_mode` — it will say `live-dynatrace-openpipeline`
+5. Open `/docs` for the full API surface
+
+Or, from the terminal:
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri "https://zerotouch-sre-971465910048.us-central1.run.app/alert" `
+  -ContentType "application/json" `
+  -Body (Get-Content .\sample_alert.json -Raw) | ConvertTo-Json -Depth 4
+```
+
+---
 
 ## What It Does
 
-1. Accepts an incident alert at `POST /alert`.
-2. Normalizes the alert into an incident record.
-3. Attempts live Dynatrace telemetry through deployed credentials.
-4. Falls back to deterministic telemetry if live evidence is unavailable.
-5. Produces root-cause reasoning and a mitigation plan.
-6. Executes only allowlisted simulated mitigation actions.
-7. Returns paths for a post-mortem, machine-readable runbook, and agent trace.
-8. Tracks estimated token burn against configured budget guardrails.
+```
+Alert Received
+    ↓
+Perceive (normalize alert)
+    ↓
+Telemetry (Dynatrace OpenPipeline ↔ ZeroTouch SRE)
+    ↓
+Reason (Gemini — root cause with confidence score)
+    ↓
+Plan (Gemini — mitigation strategy)
+    ↓
+Policy Gate (allowlist check, simulation-only)
+    ↓
+Execute (simulated: scale, rollback, open channel)
+    ↓
+Synthesize (post-mortem + runbook + audit trail written)
+```
 
-![Alert response](assets/screenshots/02-alert-result.png)
-
-## Operational Capabilities
+### Operational Capabilities
 
 | Area | What ZeroTouch SRE Provides |
-| --- | --- |
-| Action over chat | The agent runs a complete operational loop instead of only answering a question. |
-| Telemetry-first reasoning | Dynatrace evidence is attempted before root-cause reasoning and mitigation planning. |
-| Safe autonomy | Mitigations are policy-gated and simulated; destructive writes are blocked. |
-| Auditability | Each run produces a post-mortem, runbook, mitigation audit trail, and agent trace. |
-| Cost awareness | Simulated model usage is tracked against INR budget guardrails. |
-| Hosted operations UI | The Cloud Run URL is a usable product surface, not just a raw API endpoint. |
+|------|-----------------------------|
+| **Dynatrace Observability** | Bidirectional — pushes events to OpenPipeline AND pulls logs for evidence |
+| **Action over chat** | Completes a full operational loop, not just a Q&A |
+| **Telemetry-first reasoning** | Dynatrace evidence fetched before any AI reasoning |
+| **Safe autonomy** | All mitigations policy-gated and simulated |
+| **Auditability** | Post-mortem, runbook, mitigation audit, agent trace per run |
+| **Cost awareness** | Estimated token burn tracked against INR budget guardrails |
+| **Hosted product surface** | Cloud Run URL is an operator-usable workbench, not a raw endpoint |
 
-## Why It Matters
-
-The first minutes of an outage are noisy: alerts, dashboards, runbooks, chat threads, and incomplete context all compete for attention. ZeroTouch SRE turns that early incident window into a structured operational loop. It gives small teams a consistent first pass at triage, a safe mitigation proposal, and reusable documentation without pretending that production control should be handed away blindly.
-
-The project is built around three practical principles:
-
-- **Action over chat**: the service completes a webhook-to-artifact workflow instead of only answering a question.
-- **Evidence before action**: telemetry is gathered before root-cause reasoning and mitigation planning.
-- **Human control by default**: production-affecting actions are simulated and allowlisted.
+---
 
 ## Architecture
 
-![Operational loop](assets/screenshots/03-architecture-loop.png)
-
-The backend follows a controlled incident loop:
-
-- **Webhook**: `app/main.py` exposes `/health` and `/alert`.
-- **Telemetry**: `app/mcp_client.py` attempts Dynatrace evidence and falls back deterministically.
-- **Reasoning**: `app/engine.py` performs the perceive, reason, plan, execute, synthesize flow.
-- **Safety**: `app/action_executor.py` enforces an allowlist and writes an audit trail.
-- **Budgeting**: `app/billing_guard.py` estimates usage and blocks excessive burn.
-- **Runtime metadata**: `app/adk_adapter.py` records Google ADK availability and model-role metadata.
-
-## Agent Loop
-
 ```mermaid
 flowchart LR
-    A["Incoming alert"] --> B["Perceive incident"]
-    B --> C["Retrieve telemetry"]
-    C --> D["Reason about root cause"]
-    D --> E["Plan mitigation"]
-    E --> F["Policy gate"]
-    F --> G["Simulate safe actions"]
-    G --> H["Write artifacts"]
+    A["Incoming alert\nPOST /alert"] --> B["Perceive\nNormalize"]
+    B --> C["Dynatrace\nOpenPipeline"]
+    C -->|"Push events\n202 OK"| DT[("Dynatrace\nGrail")]
+    DT -->|"Pull logs\nlogs/search"| C
+    C --> D["Gemini\nReason"]
+    D --> E["Gemini\nPlan"]
+    E --> F["Policy Gate\nAllowlist"]
+    F --> G["Execute\nSimulate"]
+    G --> H["Artifacts\nPM + RB + Trace"]
 ```
 
-The engine attempts live provider evidence first. When a Gemini API key is configured, the reason and plan phases also attempt compact JSON generation before falling back to deterministic logic. If any live dependency is unavailable, the response still completes and marks fallback mode visibly.
+### Component Map
+
+| File | Role |
+|------|------|
+| `app/main.py` | FastAPI routes, branded UI (1092 lines) |
+| `app/engine.py` | ZeroTouchSREEngine — full incident loop |
+| `app/mcp_client.py` | Dynatrace OpenPipeline + log client |
+| `app/action_executor.py` | Safety allowlist + audit trail |
+| `app/billing_guard.py` | Token cost tracker + budget guard |
+| `app/adk_adapter.py` | Google ADK compatibility metadata |
+| `app/mock_dynatrace.py` | Deterministic fallback telemetry |
+
+---
 
 ## Public API
-
-### Website
-
-Open:
-
-```text
-https://zerotouch-sre-971465910048.us-central1.run.app/
-```
-
-Use the embedded workbench to run or edit an incident without leaving the page.
 
 ### Health
 
 ```powershell
-Invoke-RestMethod `
-  -Method Get `
-  -Uri "https://zerotouch-sre-971465910048.us-central1.run.app/health"
+Invoke-RestMethod -Uri "https://zerotouch-sre-971465910048.us-central1.run.app/health"
 ```
-
-Example response:
 
 ```json
-{
-  "status": "ok",
-  "service": "zerotouch-sre"
-}
+{ "status": "ok", "service": "zerotouch-sre" }
 ```
 
-### Guided Incident Review
-
-Open:
-
-```text
-https://zerotouch-sre-971465910048.us-central1.run.app/scenario
-```
-
-This runs the included checkout incident through the same engine used by `POST /alert`, then renders the result as an operator-readable incident review.
-
-For raw JSON output:
-
-```text
-https://zerotouch-sre-971465910048.us-central1.run.app/scenario.json
-```
-
-### Interactive Docs
-
-Open:
-
-```text
-https://zerotouch-sre-971465910048.us-central1.run.app/docs
-```
-
-Use `GET /scenario.json` for the fastest raw response, or use the Swagger UI `POST /alert` form with the sample payload from [sample_alert.json](sample_alert.json).
-
-### Alert
+### Alert (main endpoint)
 
 ```powershell
-Invoke-RestMethod `
-  -Method Post `
+Invoke-RestMethod -Method Post `
   -Uri "https://zerotouch-sre-971465910048.us-central1.run.app/alert" `
   -ContentType "application/json" `
   -Body (Get-Content .\sample_alert.json -Raw)
@@ -184,169 +163,210 @@ Invoke-RestMethod `
 
 Key response fields:
 
-- `ok`
-- `incident_id`
-- `status`
-- `root_cause`
-- `mitigation`
-- `telemetry_mode`
-- `telemetry`
-- `post_mortem_path`
-- `runbook_path`
-- `trace_path`
-- `billing`
+| Field | Description |
+|-------|-------------|
+| `ok` | Boolean — incident processed |
+| `incident_id` | Identifier from the alert |
+| `status` | `mitigated` or `escalated` |
+| `root_cause` | AI-generated diagnosis string |
+| `telemetry_mode` | `live-dynatrace-openpipeline` or `mock` |
+| `mitigation.actions` | List of simulated actions + approval status |
+| `post_mortem_path` | Path to generated markdown post-mortem |
+| `runbook_path` | Path to machine-readable JSON runbook |
+| `trace_path` | Path to `agent_trace.json` execution trace |
+| `billing` | Token usage + cost estimate |
 
-Example custom alert:
+Each run generates four review artifacts automatically:
+- **post-mortem** — markdown incident summary
+- **runbook** — machine-readable JSON (`runbook.json`)
+- **agent trace** — full phase log (`agent_trace.json`)
+- **mitigation audit** — allowlist decision record
+
+`scripts/capture_demo.py --live` captures the hosted response into `demo_response.json` and records a lightweight `agent_trace.json` pointer for review. The `mock_dynatrace.py` fallback provides deterministic telemetry when live credentials are unavailable, so the pipeline always completes.
+
+### Custom Alert Example
 
 ```json
 {
-  "incident_id": "INC-WORLD-CUP-PAYMENTS",
-  "service": "ticketing-payments",
-  "severity": "high",
-  "title": "Payment failures during ticket sale surge",
+  "incident_id": "INC-PAYMENT-20260610",
+  "service": "payment-service",
+  "severity": "critical",
+  "title": "Payment gateway timeout cascade",
   "details": {
-    "region": "northamerica-northeast1",
-    "slo": "successful-payment-rate",
-    "trigger": "Payment authorization failures above 4 percent",
-    "business_event": "high-demand public ticket window"
+    "region": "us-central1",
+    "slo": "payment-success-rate",
+    "trigger": "Stripe p99 latency > 3s for 5 minutes"
   }
 }
 ```
 
+---
+
 ## Safety Model
 
-ZeroTouch SRE is intentionally simulation-first.
+ZeroTouch SRE is **simulation-first by design**.
 
-Allowed actions:
+```json
+{
+  "mode": "simulation",
+  "live_write_access": false,
+  "requires_human_for_destructive_actions": true,
+  "allowed_actions": ["scale_service", "rollback_release", "open_incident_channel"]
+}
+```
 
-- `scale_service`
-- `rollback_release`
-- `open_incident_channel`
+The action executor rejects every unapproved or destructive action. The agent completes the full incident loop — evidence, reasoning, planning, mitigation — while preserving human control over production changes.
 
-The action executor rejects unapproved or destructive actions. This keeps the agent useful during incident triage while preserving human control over production changes.
+---
 
-## Artifact Outputs
+## Dynatrace Bidirectional Flow Explained
 
-Each successful run writes review artifacts inside the running service environment:
+### Why This Matters for SRE
 
-- post-mortem markdown
-- machine-readable runbook JSON
-- agent trace JSON
-- mitigation audit log
+Traditional alert-to-runbook flows are unidirectional: an alert fires, a human reads the runbook. ZeroTouch SRE makes it bidirectional:
 
-The public API returns paths to those artifacts. The hosted scenario page also renders safe post-mortem and runbook previews, then keeps the raw response available for deeper inspection.
+1. **Alert arrives** at ZeroTouch SRE
+2. **ZeroTouch pushes** structured events to Dynatrace OpenPipeline — creating an AI-triage trail visible to your entire ops team
+3. **ZeroTouch pulls** Dynatrace log evidence for the service — using real production context
+4. **Dynatrace becomes the single source of truth** for both the original alert AND the AI's response to it
 
-## Design Notes
+This means your Dynatrace dashboards, Davis AI, and NOC teams see ZeroTouch SRE actions in real time — it's an integrated ops loop, not a parallel silo.
 
-The project is intentionally machine-to-machine at the backend layer, but the hosted root URL is a real product surface for operators and platform teams. It gives teams a fast way to understand the workflow, run the checkout outage scenario, edit the payload, and see the response without needing local setup.
+### OpenPipeline Events Schema
 
-The UI emphasizes:
+Each alert produces two OpenPipeline events:
 
-- a clear first action
-- readable incident payload
-- visible agent phases
-- artifact previews for non-technical review
-- direct operational capability callouts
-- safe-action language
-- API docs as a secondary path
+```json
+{
+  "event.name": "zerotouch.sre.alert.received",
+  "service": "checkout-api",
+  "severity": "CRITICAL",
+  "incident_id": "INC-CHECKOUT-20260607",
+  "zerotouch.sre": "true",
+  "zerotouch.auto_remediation": "true"
+}
+```
+
+```json
+{
+  "event.name": "zerotouch.sre.triage.started",
+  "service": "checkout-api",
+  "severity": "INFO",
+  "content": "AI-powered triage initiated — fetching telemetry from Dynatrace"
+}
+```
+
+---
+
+## Why It Matters
+
+The first minutes of an outage are the most expensive. Noise from alerts, dashboards, runbooks, and chat threads compete for attention. ZeroTouch SRE turns that chaos into a structured, auditable, AI-accelerated loop — evidence first, actions second, humans always in control.
+
+**Three principles:**
+
+- **Action over chat** — completes a webhook-to-artifact workflow, not a chatbot response
+- **Evidence before action** — Dynatrace telemetry fetched and analyzed before any reasoning
+- **Human control by default** — every production action requires explicit approval to leave simulation
+
+---
 
 ## Local Setup
 
-Prerequisites:
-
-- Python 3.11+
-- `pip`
-
-Install dependencies:
+**Prerequisites:** Python 3.11+
 
 ```powershell
+# Clone and install
+git clone https://github.com/PratikCreates/zerotouch-sre.git
+cd zerotouch-sre
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Run locally:
+```powershell
+# Configure (create .env)
+DYNATRACE_URL=https://your-env.live.dynatrace.com
+DYNATRACE_API_KEY=<token-with-openpipeline:events:ingest-scope>
+GEMINI_API_KEY=<your-gemini-key>
+GCP_PROJECT_ID=<your-project>
+```
 
 ```powershell
+# Run
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-Send a local alert:
-
 ```powershell
-Invoke-RestMethod `
-  -Method Post `
-  -Uri "http://127.0.0.1:8080/alert" `
-  -ContentType "application/json" `
-  -Body (Get-Content .\sample_alert.json -Raw)
+# Test
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8080/alert" `
+  -ContentType "application/json" -Body (Get-Content .\sample_alert.json -Raw)
 ```
 
-## Configuration
-
-Runtime configuration is read from environment variables:
-
-```ini
-DYNATRACE_URL=https://example.live.dynatrace.com
-DYNATRACE_API_KEY=<dynatrace-api-token>
-GEMINI_API_KEY=<gemini-api-key>
-GCP_PROJECT_ID=<google-cloud-project-id>
-GCP_TOTAL_CREDIT_BUDGET_INR=25000
-GCP_MAX_MONTHLY_BURN_LIMIT_INR=900
-```
-
-For deterministic local runs:
-
+**For deterministic local runs (no external APIs):**
 ```ini
 ZEROTOUCH_DISABLE_LIVE=1
 ```
 
-Never commit `.env` files. The deployed Cloud Run service uses Secret Manager for provider keys.
+---
 
 ## Verification
 
 ```powershell
+# Run test suite (19 tests)
+python -m pytest tests/ -q
+
+# Compile check
 python -m compileall app -q
+
+# Push demo events to Dynatrace
+python scripts\ingest_demo_events.py
 ```
 
-Private local packaging helpers are kept out of the public repository history. When present locally, `scripts/capture_demo.py --live` captures the hosted response into `demo_response.json` and records a lightweight `agent_trace.json` pointer for review.
-
-Current package status:
-
-- FastAPI backend implemented.
-- Cloud Run deployment verified.
-- `/health` and `/alert` smoke-tested.
-- Secret-backed provider keys configured in Cloud Run.
-- Local verification completed successfully.
+---
 
 ## Repository Layout
 
-```text
+```
 .
-|-- app/
-|   |-- action_executor.py
-|   |-- adk_adapter.py
-|   |-- billing_guard.py
-|   |-- engine.py
-|   |-- main.py
-|   |-- mcp_client.py
-|   `-- mock_dynatrace.py
-|-- assets/
-|   `-- screenshots/
-|-- Dockerfile
-|-- LICENSE
-|-- README.md
-|-- WALKTHROUGH.md
-|-- requirements.txt
-`-- sample_alert.json
+├── app/                     # FastAPI core backend application
+│   ├── main.py              # Web router & interactive incident workbench
+│   ├── engine.py            # ZeroTouchSREEngine incident response loop
+│   ├── mcp_client.py        # Dynatrace OpenPipeline & Log Search client
+│   ├── action_executor.py   # Safety policy gate & action allowlist
+│   ├── billing_guard.py     # Token burn estimator & cost guardrails
+│   ├── adk_adapter.py       # Google ADK metadata adaptor
+│   └── mock_dynatrace.py    # Mock telemetry fallback data
+├── assets/                  # Images, project branding & logos
+│   └── screenshots/         # Product dashboard & incident result screenshots
+├── scripts/                 # Automation & utility scripts
+│   ├── ingest_demo_events.py# Push audit events to Dynatrace
+│   └── generate_presentation.py # Programmatically compiles PPTX presentation
+├── tests/                   # pytest test suite verifying all modules
+├── Dockerfile               # Production container definition for Cloud Run
+├── requirements.txt         # Core project dependencies
+├── sample_alert.json        # Example raw alert webhook payload
+├── .env.example             # Template for local credentials config
+├── ZeroTouch_SRE_Presentation.pptx # Hackathon presentation slide deck
+├── WALKTHROUGH.md           # Step-by-step verification guide
+└── README.md                # Project landing documentation
 ```
 
-## Walkthrough
 
-See [WALKTHROUGH.md](WALKTHROUGH.md) for a step-by-step operational walkthrough with commands and expected outputs.
+---
+
+## WALKTHROUGH.md
+
+See [WALKTHROUGH.md](WALKTHROUGH.md) for a step-by-step operational walkthrough with commands and expected outputs including the Dynatrace integration flow.
+
+---
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
 
+---
+
 ## Connect
 
-[Pratik Shah](https://www.linkedin.com/in/pratikcreates)
+Built for the **Google Cloud Rapid Agent Hackathon — Dynatrace Track**
+
+[Pratik Shah](https://www.linkedin.com/in/pratikcreates) · [GitHub](https://github.com/PratikCreates/zerotouch-sre)

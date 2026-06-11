@@ -85,6 +85,20 @@ class AlertPayload(BaseModel):
             }
         ],
     )
+    # Judge-mode: optional per-request Dynatrace credential overrides.
+    # Passed via the browser Connect panel; never logged or persisted server-side.
+    # NOTE: exclude=True is intentionally NOT set — we need these in model_dump()
+    # so engine.handle_alert() can pick them up to override Dynatrace credentials.
+    dt_url: str | None = Field(
+        default=None,
+        description="Optional Dynatrace environment URL override (judge mode).",
+        json_schema_extra={"x-hidden": True},
+    )
+    dt_token: str | None = Field(
+        default=None,
+        description="Optional Dynatrace API token override (judge mode).",
+        json_schema_extra={"x-hidden": True},
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -130,6 +144,11 @@ class TelemetrySummary(BaseModel):
         default=None,
         description="Sanitized fallback note when live telemetry is unavailable. No credentials are returned.",
         examples=["Dynatrace API fallback: HTTP Error 400: Bad Request"],
+    )
+    environment_url: str = Field(
+        default="",
+        description="Dynatrace environment URL used for this run (empty when mock).",
+        examples=["https://wbu53242.live.dynatrace.com"],
     )
 
 
@@ -218,6 +237,83 @@ CHECKOUT_SCENARIO_ALERT = {
         "trigger": "HTTP 500 rate above 5 percent for 10 minutes",
     },
 }
+
+
+class _DynatraceTestPayload(BaseModel):
+    dt_url: str
+    dt_token: str
+
+
+@app.post(
+    "/dynatrace/test",
+    include_in_schema=False,
+    summary="Test a Dynatrace connection (judge mode)",
+)
+async def dynatrace_test(payload: _DynatraceTestPayload) -> dict[str, Any]:
+    """Validate a judge-supplied Dynatrace token.
+
+    Uses /api/v2/settings/schemas (requires any app-settings:objects:read scope)
+    as a lightweight connectivity probe — this endpoint works on both SaaS and
+    Platform editions and correctly 401s on bad tokens.
+    Never persists credentials server-side.
+    """
+    import asyncio as _asyncio
+    from urllib.request import Request as _Req, urlopen as _open
+    from urllib.error import HTTPError as _HTTPError
+
+    base = payload.dt_url.strip().rstrip("/")
+    token = payload.dt_token.strip()
+    if not base.startswith("https://"):
+        return {"ok": False, "error": "URL must start with https://"}
+    if not token:
+        return {"ok": False, "error": "Token is required"}
+
+    def _check() -> dict[str, Any]:
+        headers = {"Authorization": f"Api-Token {token}", "Accept": "application/json"}
+
+        # Primary probe: settings schemas — works with read scopes on SaaS + Platform
+        probe_req = _Req(f"{base}/api/v2/settings/schemas?pageSize=1", headers=headers)
+        try:
+            with _open(probe_req, timeout=8) as resp:
+                __import__("json").loads(resp.read().decode())
+        except _HTTPError as exc:
+            if exc.code == 401:
+                return {"ok": False, "error": "Invalid token (401 Unauthorized)"}
+            if exc.code == 403:
+                return {"ok": False, "error": f"Token missing required scopes (403 Forbidden)"}
+            return {"ok": False, "error": f"Dynatrace returned HTTP {exc.code}"}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)[:200]}
+
+        # Secondary check: OpenPipeline events ingest (push empty list → 202)
+        try:
+            op_req = _Req(
+                f"{base}/platform/ingest/v1/events",
+                data=b"[]",
+                headers={**headers, "Content-Type": "application/json"},
+                method="POST",
+            )
+            with _open(op_req, timeout=6):
+                has_openpipeline = True
+        except Exception:
+            has_openpipeline = False
+
+        # Extract hostname for display
+        try:
+            from urllib.parse import urlparse as _p
+            env_host = _p(base).hostname or base
+        except Exception:
+            env_host = base
+
+        return {
+            "ok": True,
+            "environment": base,
+            "environment_host": env_host,
+            "has_openpipeline": has_openpipeline,
+            "scopes": ["app-settings:objects:read"] + (["openpipeline:events:ingest"] if has_openpipeline else []),
+        }
+
+    return await _asyncio.to_thread(_check)
 
 
 @app.get(
@@ -416,12 +512,38 @@ async def landing() -> str:
     .timeline span { color: var(--muted); line-height: 1.45; }
     code { background: #071016; border: 1px solid #26323b; padding: 2px 6px; border-radius: 6px; color: #fff4ba; }
     footer { color: #8fa5ad; margin-top: 36px; font-size: 14px; }
+    /* ── Dynatrace Connect Panel ── */
+    .dt-connect { border: 1px solid #2a4a5a; background: linear-gradient(135deg,#0c1a22,#0f1e28); border-radius: 14px; padding: 22px 24px; margin-top: 28px; }
+    .dt-connect-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .dt-connect-header h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+    .dt-logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg,#83e7ff,#b8ffd7); border-radius: 6px; display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+    .dt-optional { font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #5a8090; border: 1px solid #2a4a5a; border-radius: 999px; padding: 3px 8px; margin-left: auto; }
+    .dt-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dt-field label { display: block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .09em; color: #7aa0ae; margin-bottom: 6px; }
+    .dt-field input { width: 100%; border: 1px solid #2d4651; background: #071016; color: #e6fff0; border-radius: 8px; padding: 10px 12px; font: 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; outline: none; transition: border-color .15s; }
+    .dt-field input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(131,231,255,.1); }
+    .dt-field input::placeholder { color: #3a5562; }
+    .dt-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+    .dt-status { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; min-height: 20px; }
+    .dt-status.idle { color: #5a8090; }
+    .dt-status.checking { color: var(--amber); }
+    .dt-status.ok { color: var(--mint); }
+    .dt-status.err { color: #ff8f8f; }
+    .dt-status .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+    .dt-status.checking .dot { animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .dt-hint { color: #4a7080; font-size: 12px; line-height: 1.5; margin-top: 10px; }
+    .dt-hint code { font-size: 11px; }
+    .dt-scopes { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .dt-scope-tag { font-size: 10px; font-weight: 800; background: #0e2230; border: 1px solid #1e4060; color: var(--cyan); border-radius: 4px; padding: 2px 7px; letter-spacing: .04em; }
+    .dt-scope-tag.missing { color: #ff8f8f; border-color: #4a2020; background: #1a0e0e; }
     @media (max-width: 900px) {
       .hero, .try, .workbench { grid-template-columns: 1fr; }
       .grid, .flow, .innovation-grid, .story-grid { grid-template-columns: 1fr 1fr; }
       .mini-artifacts { grid-template-columns: 1fr; }
       .summary { grid-template-columns: 1fr; }
       .section-head { display: block; }
+      .dt-fields { grid-template-columns: 1fr; }
     }
     @media (max-width: 560px) {
       main { width: min(100vw - 24px, 1180px); padding-top: 18px; }
@@ -502,6 +624,34 @@ async def landing() -> str:
         <p>Edit the alert JSON, run it, and compare root cause, telemetry mode, safe actions, generated artifacts, and budget guardrails.</p>
       </div>
     </section>
+
+    <!-- ── Dynatrace Connect Panel ── -->
+    <div class="dt-connect" id="dtConnect" aria-label="Connect your Dynatrace environment">
+      <div class="dt-connect-header">
+        <div class="dt-logo-mark" aria-hidden="true">⬡</div>
+        <h2>Connect your Dynatrace</h2>
+        <span class="dt-optional">Optional</span>
+      </div>
+      <div class="dt-fields">
+        <div class="dt-field">
+          <label for="dtUrl">Environment URL</label>
+          <input id="dtUrl" type="url" placeholder="https://xyz12345.live.dynatrace.com" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="dt-field">
+          <label for="dtToken">API Token</label>
+          <input id="dtToken" type="password" placeholder="dt0s16.xxxxxxxxxxxx…" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+      <div class="dt-actions">
+        <button class="button secondary" id="dtTestBtn" type="button">Test connection</button>
+        <div class="dt-status idle" id="dtStatus">
+          <span class="dot"></span>
+          <span id="dtStatusText">Enter your environment URL and token</span>
+        </div>
+      </div>
+      <div class="dt-hint">Needs <code>openpipeline:events:ingest</code> scope. When connected, ZeroTouch SRE pushes events to <em>your</em> Dynatrace and queries your logs — proving live bidirectional integration.</div>
+      <div class="dt-scopes hidden" id="dtScopeList"></div>
+    </div>
 
     <section class="workbench" aria-label="Interactive incident workbench">
       <div class="card">
@@ -653,26 +803,117 @@ async def landing() -> str:
     const statusline = document.getElementById("statusline");
     const rawOutput = document.getElementById("rawOutput");
     const artifactPreviews = document.getElementById("artifactPreviews");
+    const runDemoBtn = document.getElementById("runDemo");
 
-    function setStatus(text) {
-      statusline.textContent = text;
+    // ── Dynatrace Connect state ──
+    let dtConnected = false;
+    let dtEnv = { url: "", token: "" };
+
+    function setStatus(text) { statusline.textContent = text; }
+    function money(v) { return v == null ? "-" : "INR " + Number(v).toFixed(4); }
+
+    // Update the Run button label based on DT connection state
+    function syncRunButton() {
+      runDemoBtn.textContent = dtConnected
+        ? "Run with MY Dynatrace ⬡"
+        : "Run checkout incident";
     }
 
-    function money(value) {
-      if (value === undefined || value === null) return "-";
-      return "INR " + Number(value).toFixed(4);
+    // ── DT connect panel ──
+    const dtStatus    = document.getElementById("dtStatus");
+    const dtStatusTxt = document.getElementById("dtStatusText");
+    const dtScopeList = document.getElementById("dtScopeList");
+
+    function setDtStatus(state, text) {
+      dtStatus.className = "dt-status " + state;
+      dtStatusTxt.textContent = text;
     }
+
+    document.getElementById("dtTestBtn").addEventListener("click", async () => {
+      const url   = document.getElementById("dtUrl").value.trim();
+      const token = document.getElementById("dtToken").value.trim();
+      if (!url || !token) { setDtStatus("err", "Enter both URL and token first"); return; }
+      setDtStatus("checking", "Connecting…");
+      dtScopeList.className = "dt-scopes hidden";
+      try {
+        const res  = await fetch("/dynatrace/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dt_url: url, dt_token: token }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          dtConnected = true;
+          dtEnv = { url, token };
+          const env = data.environment_host || new URL(url).hostname;
+          setDtStatus("ok", `Connected · ${env}`);
+          
+          // Save to localStorage
+          localStorage.setItem("dt_url", url);
+          localStorage.setItem("dt_token", token);
+
+          // Show connection capability tags
+          const tags = [
+            `<span class="dt-scope-tag">✓ Authenticated</span>`,
+            data.has_openpipeline
+              ? `<span class="dt-scope-tag">✓ OpenPipeline ready</span>`
+              : `<span class="dt-scope-tag missing">✗ openpipeline:events:ingest missing</span>`,
+            `<span class="dt-scope-tag" style="margin-left:4px">Run below to push live events →</span>`,
+          ];
+          dtScopeList.innerHTML = tags.join("");
+          dtScopeList.className = "dt-scopes";
+        } else {
+          dtConnected = false;
+          setDtStatus("err", data.error || "Connection failed");
+        }
+      } catch (e) {
+        dtConnected = false;
+        setDtStatus("err", "Network error: " + e.message);
+      }
+      syncRunButton();
+    });
+
+    // Clear connection if URL/token edited
+    ["dtUrl", "dtToken"].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        if (dtConnected) {
+          dtConnected = false;
+          dtEnv = { url: "", token: "" };
+          setDtStatus("idle", "Enter your environment URL and token");
+          dtScopeList.className = "dt-scopes hidden";
+          localStorage.removeItem("dt_url");
+          localStorage.removeItem("dt_token");
+          syncRunButton();
+        }
+      });
+    });
+
+    // Load from localStorage on startup
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedUrl = localStorage.getItem("dt_url");
+      const savedToken = localStorage.getItem("dt_token");
+      if (savedUrl && savedToken) {
+        document.getElementById("dtUrl").value = savedUrl;
+        document.getElementById("dtToken").value = savedToken;
+        document.getElementById("dtTestBtn").click();
+      }
+    });
 
     function renderResult(data) {
-      document.getElementById("resultStatus").textContent = data.ok ? data.status : "failed";
-      document.getElementById("resultTelemetry").textContent = (data.telemetry && data.telemetry.mode ? data.telemetry.mode : data.telemetry_mode || "-") + " / " + (data.telemetry && data.telemetry.source ? data.telemetry.source : "-");
-      document.getElementById("resultIncident").textContent = data.incident_id || "-";
-      document.getElementById("resultBudget").textContent = data.billing ? money(data.billing.estimated_cost_inr) : "-";
-      document.getElementById("resultCause").textContent = data.root_cause || "No root cause returned.";
+      const mode = (data.telemetry && data.telemetry.mode) || data.telemetry_mode || "-";
+      const src  = (data.telemetry && data.telemetry.source) || "-";
+      const envHtml = data.telemetry && data.telemetry.environment_url
+        ? ` · <a href="${data.telemetry.environment_url}" target="_blank" style="color: var(--cyan); text-decoration: underline;">${new URL(data.telemetry.environment_url).hostname}</a>`
+        : "";
+      document.getElementById("resultStatus").textContent    = data.ok ? data.status : "failed";
+      document.getElementById("resultTelemetry").innerHTML   = mode + " / " + src + envHtml;
+      document.getElementById("resultIncident").textContent  = data.incident_id || "-";
+      document.getElementById("resultBudget").textContent    = data.billing ? money(data.billing.estimated_cost_inr) : "-";
+      document.getElementById("resultCause").textContent     = data.root_cause || "No root cause returned.";
       const actions = document.getElementById("resultActions");
       actions.innerHTML = "";
       const planned = data.mitigation && Array.isArray(data.mitigation.actions) ? data.mitigation.actions : [];
-      planned.forEach((item) => {
+      planned.forEach(item => {
         const li = document.createElement("li");
         li.textContent = `${item.action} on ${item.target}: ${item.status}`;
         actions.appendChild(li);
@@ -681,7 +922,7 @@ async def landing() -> str:
       if (previews.post_mortem || previews.runbook) {
         artifactPreviews.classList.remove("hidden");
         document.getElementById("postMortemPreview").textContent = previews.post_mortem || "Post-mortem preview unavailable.";
-        document.getElementById("runbookPreview").textContent = previews.runbook || "Runbook preview unavailable.";
+        document.getElementById("runbookPreview").textContent    = previews.runbook || "Runbook preview unavailable.";
       } else {
         artifactPreviews.classList.add("hidden");
       }
@@ -690,37 +931,37 @@ async def landing() -> str:
     }
 
     async function runPayload(payload) {
-      setStatus("Running incident loop...");
+      // Inject judge-mode credentials if connected
+      const body = dtConnected
+        ? { ...payload, dt_url: dtEnv.url, dt_token: dtEnv.token }
+        : payload;
+      setStatus(dtConnected
+        ? "Running with YOUR Dynatrace — pushing events and pulling logs…"
+        : "Running incident loop…");
       rawOutput.classList.add("hidden");
       artifactPreviews.classList.add("hidden");
       const response = await fetch("/alert", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || "Request failed");
-      }
+      if (!response.ok) throw new Error(data.detail || "Request failed");
       renderResult(data);
-      setStatus("Completed. Review the diagnosis, actions, telemetry, and raw trace preview.");
+      setStatus(dtConnected
+        ? "Done. Events pushed to YOUR Dynatrace — check your environment."
+        : "Completed. Review the diagnosis, actions, telemetry, and raw trace preview.");
     }
 
-    document.getElementById("runDemo").addEventListener("click", async () => {
+    runDemoBtn.addEventListener("click", async () => {
       payloadBox.value = JSON.stringify(samplePayload, null, 2);
-      try {
-        await runPayload(samplePayload);
-      } catch (error) {
-        setStatus("Error: " + error.message);
-      }
+      try { await runPayload(samplePayload); }
+      catch (e) { setStatus("Error: " + e.message); }
     });
 
     document.getElementById("runCustom").addEventListener("click", async () => {
-      try {
-        await runPayload(JSON.parse(payloadBox.value));
-      } catch (error) {
-        setStatus("Error: " + error.message);
-      }
+      try { await runPayload(JSON.parse(payloadBox.value)); }
+      catch (e) { setStatus("Error: " + e.message); }
     });
 
     document.getElementById("resetPayload").addEventListener("click", () => {
@@ -835,8 +1076,16 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
     root_cause = escape(str(payload.get("root_cause", "Root cause unavailable.")))
     incident_id = escape(str(payload.get("incident_id", "")))
     status = escape(str(payload.get("status", "")))
-    telemetry_mode = escape(str(telemetry.get("mode", payload.get("telemetry_mode", ""))))
-    telemetry_source = escape(str(telemetry.get("source", "")))
+    raw_mode = str(telemetry.get("mode", payload.get("telemetry_mode", "")))
+    raw_src = str(telemetry.get("source", ""))
+    env_url = str(telemetry.get("environment_url", ""))
+    if env_url:
+        from urllib.parse import urlparse
+        env_host = urlparse(env_url).hostname or env_url
+        telemetry_display = f'{escape(raw_mode)} / {escape(raw_src)} · <a href="{escape(env_url)}" target="_blank" style="color: var(--cyan); text-decoration: underline;">{escape(env_host)}</a>'
+    else:
+        telemetry_display = f'{escape(raw_mode)} / {escape(raw_src)}'
+    telemetry_source = escape(raw_src)
     fallback_note = escape(str(telemetry.get("fallback_note") or "Live telemetry succeeded or no fallback note was needed."))
     cost = escape(f"INR {float(billing.get('estimated_cost_inr', 0.0)):.4f}")
     tokens = escape(str(billing.get("total_tokens", "-")))
@@ -913,7 +1162,35 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
     details {{ margin-top:16px; border:1px solid #31525f; border-radius:10px; background:#071016; overflow:hidden; }}
     summary {{ cursor:pointer; padding:14px 16px; color:var(--amber); font-weight:900; }}
     pre {{ margin:0; padding:16px; overflow:auto; color:#dff9e9; border-top:1px solid #263f49; font-size:13px; line-height:1.55; }}
-    @media (max-width: 900px) {{ .hero,.two,.split,.artifact-preview {{ grid-template-columns:1fr; }} .status,.flow {{ grid-template-columns:1fr 1fr; }} }}
+    
+    /* ── Dynatrace Connect Panel ── */
+    .dt-connect {{ border: 1px solid #2a4a5a; background: linear-gradient(135deg,#0c1a22,#0f1e28); border-radius: 14px; padding: 22px 24px; margin: 20px 0; }}
+    .dt-connect-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }}
+    .dt-connect-header h2 {{ margin: 0; font-size: 20px; letter-spacing: -.02em; }}
+    .dt-logo-mark {{ width: 28px; height: 28px; background: linear-gradient(135deg,#83e7ff,#b8ffd7); border-radius: 6px; display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }}
+    .dt-optional {{ font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: #5a8090; border: 1px solid #2a4a5a; border-radius: 999px; padding: 3px 8px; margin-left: auto; }}
+    .dt-fields {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }}
+    .dt-field label {{ display: block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .09em; color: #7aa0ae; margin-bottom: 6px; }}
+    .dt-field input {{ width: 100%; border: 1px solid #2d4651; background: #071016; color: #e6fff0; border-radius: 8px; padding: 10px 12px; font: 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; outline: none; transition: border-color .15s; }}
+    .dt-field input:focus {{ border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(131,231,255,.1); }}
+    .dt-field input::placeholder {{ color: #3a5562; }}
+    .dt-actions {{ display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }}
+    .dt-status {{ font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 7px; min-height: 20px; }}
+    .dt-status.idle {{ color: #5a8090; }}
+    .dt-status.checking {{ color: var(--amber); }}
+    .dt-status.ok {{ color: var(--mint); }}
+    .dt-status.err {{ color: #ff8f8f; }}
+    .dt-status .dot {{ width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex-shrink: 0; }}
+    .dt-status.checking .dot {{ animation: pulse 1s ease-in-out infinite; }}
+    @keyframes pulse {{ 0%,100%{{opacity:1}} 50%{{opacity:.3}} }}
+    .dt-hint {{ color: #4a7080; font-size: 12px; line-height: 1.5; margin-top: 10px; }}
+    .dt-hint code {{ font-size: 11px; }}
+    .dt-scopes {{ display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }}
+    .dt-scope-tag {{ font-size: 10px; font-weight: 800; background: #0e2230; border: 1px solid #1e4060; color: var(--cyan); border-radius: 4px; padding: 2px 7px; letter-spacing: .04em; }}
+    .dt-scope-tag.missing {{ color: #ff8f8f; border-color: #4a2020; background: #1a0e0e; }}
+    .hidden {{ display: none !important; }}
+
+    @media (max-width: 900px) {{ .hero,.two,.split,.artifact-preview {{ grid-template-columns:1fr; }} .status,.flow {{ grid-template-columns:1fr 1fr; }} .dt-fields {{ grid-template-columns: 1fr; }} }}
     @media (max-width: 700px) {{ .before-after {{ grid-template-columns:1fr; }} }}
     @media (max-width: 560px) {{ main {{ width:min(100vw - 24px,1120px); }} nav {{ align-items:flex-start; flex-direction:column; }} .status,.flow {{ grid-template-columns:1fr; }} }}
   </style>
@@ -942,17 +1219,46 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
         <h1>Checkout incident stabilized.</h1>
         <p>A single alert comes in. ZeroTouch SRE checks operational context, builds a root-cause hypothesis, chooses policy-safe actions, and leaves a review trail for the human owner.</p>
         <div class="status">
-          <div class="metric"><small>Status</small><strong>{status}</strong></div>
-          <div class="metric"><small>Incident</small><strong>{incident_id}</strong></div>
-          <div class="metric"><small>Telemetry</small><strong>{telemetry_mode}</strong></div>
-          <div class="metric"><small>Estimated cost</small><strong>{cost}</strong></div>
+          <div class="metric"><small>Status</small><strong id="resultStatus">{status}</strong></div>
+          <div class="metric"><small>Incident</small><strong id="resultIncident">{incident_id}</strong></div>
+          <div class="metric"><small>Telemetry</small><strong id="resultTelemetry">{telemetry_display}</strong></div>
+          <div class="metric"><small>Estimated cost</small><strong id="resultBudget">{cost}</strong></div>
         </div>
       </div>
     </section>
 
+    <!-- ── Dynatrace Connect Panel ── -->
+    <div class="dt-connect" id="dtConnect" aria-label="Connect your Dynatrace environment">
+      <div class="dt-connect-header">
+        <div class="dt-logo-mark" aria-hidden="true">⬡</div>
+        <h2>Connect your Dynatrace</h2>
+        <span class="dt-optional">Optional</span>
+      </div>
+      <div class="dt-fields">
+        <div class="dt-field">
+          <label for="dtUrl">Environment URL</label>
+          <input id="dtUrl" type="url" placeholder="https://xyz12345.live.dynatrace.com" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="dt-field">
+          <label for="dtToken">API Token</label>
+          <input id="dtToken" type="password" placeholder="dt0s16.xxxxxxxxxxxx…" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+      <div class="dt-actions">
+        <button class="button secondary" id="dtTestBtn" type="button">Test connection</button>
+        <button class="button primary hidden" id="dtRunScenarioBtn" type="button">Run scenario with your Dynatrace ⬡</button>
+        <div class="dt-status idle" id="dtStatus">
+          <span class="dot"></span>
+          <span id="dtStatusText">Enter your environment URL and token</span>
+        </div>
+      </div>
+      <div class="dt-hint">Needs <code>openpipeline:events:ingest</code> scope. When connected, ZeroTouch SRE pushes events to <em>your</em> Dynatrace and queries your logs — proving live bidirectional integration.</div>
+      <div class="dt-scopes hidden" id="dtScopeList"></div>
+    </div>
+
     <section class="panel" style="margin-top:16px;">
       <h2>Operational diagnosis</h2>
-      <p class="diagnosis">{root_cause}</p>
+      <p class="diagnosis" id="resultCause">{root_cause}</p>
       <div class="before-after">
         <div class="bad"><small>Before</small><strong>Checkout was failing under CPU pressure, with rising HTTP 500s and slow payment retries.</strong></div>
         <div class="good"><small>After</small><strong>Capacity relief, rollback, and incident coordination were selected under a safe simulation policy.</strong></div>
@@ -970,13 +1276,15 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
     <section class="split">
       <div class="panel">
         <h2>Safe actions taken</h2>
-        {action_cards}
+        <div id="actionCardsContainer">
+          {action_cards}
+        </div>
       </div>
       <div class="panel">
         <h2>Evidence and controls</h2>
-        <div class="metric"><small>Telemetry source</small><strong>{telemetry_source}</strong></div>
-        <p>{fallback_note}</p>
-        <div class="metric"><small>Total model tokens</small><strong>{tokens}</strong></div>
+        <div class="metric"><small>Telemetry source</small><strong id="telemetrySource">{telemetry_source}</strong></div>
+        <p id="fallbackNote">{fallback_note}</p>
+        <div class="metric"><small>Total model tokens</small><strong id="totalTokens">{tokens}</strong></div>
         <p>Actions are simulated and policy-gated. No destructive production write is performed in this hosted environment.</p>
       </div>
     </section>
@@ -994,23 +1302,201 @@ def _render_scenario_result_page(payload: dict[str, Any]) -> str:
 
     <section class="panel" style="margin-top:16px;">
       <h2>Generated artifacts</h2>
-      <ul class="artifacts">{artifacts}</ul>
+      <ul class="artifacts" id="artifactsList">{artifacts}</ul>
       <div class="artifact-preview" aria-label="Generated artifact previews">
         <article class="artifact-card">
           <h3>Post-mortem preview</h3>
-          <pre>{post_mortem_preview}</pre>
+          <pre id="postMortemPreview">{post_mortem_preview}</pre>
         </article>
         <article class="artifact-card">
           <h3>Runbook preview</h3>
-          <pre>{runbook_preview}</pre>
+          <pre id="runbookPreview">{runbook_preview}</pre>
         </article>
       </div>
       <details>
         <summary>Show raw API response</summary>
-        <pre>{raw_json}</pre>
+        <pre id="rawJson">{raw_json}</pre>
       </details>
     </section>
   </main>
+  
+  <script>
+    const samplePayload = {{
+      incident_id: "INC-CHECKOUT-20260607",
+      service: "checkout-api",
+      severity: "critical",
+      title: "Checkout API CPU spike and HTTP 500 surge",
+      details: {{
+        region: "us-central1",
+        slo: "checkout-availability",
+        trigger: "HTTP 500 rate above 5 percent for 10 minutes"
+      }}
+    }};
+
+    let dtConnected = false;
+    let dtEnv = {{ url: "", token: "" }};
+
+    function money(v) {{ return v == null ? "-" : "INR " + Number(v).toFixed(4); }}
+
+    const dtStatus    = document.getElementById("dtStatus");
+    const dtStatusTxt = document.getElementById("dtStatusText");
+    const dtScopeList = document.getElementById("dtScopeList");
+    const runBtn      = document.getElementById("dtRunScenarioBtn");
+
+    function setDtStatus(state, text) {{
+      dtStatus.className = "dt-status " + state;
+      dtStatusTxt.textContent = text;
+    }}
+
+    function formatActionLabel(action) {{
+      const labels = {{
+        "scale_service": "Scale service capacity",
+        "rollback_release": "Rollback risky release",
+        "open_incident_channel": "Open incident channel",
+      }};
+      return labels[action] || action.replace(/_/g, " ").replace(/\\b\\w/g, c => c.toUpperCase());
+    }}
+
+    function renderResult(data) {{
+      const mode = (data.telemetry && data.telemetry.mode) || data.telemetry_mode || "-";
+      const src  = (data.telemetry && data.telemetry.source) || "-";
+      const envHtml = data.telemetry && data.telemetry.environment_url
+        ? ` · <a href="${{data.telemetry.environment_url}}" target="_blank" style="color: var(--cyan); text-decoration: underline;">${{new URL(data.telemetry.environment_url).hostname}}</a>`
+        : "";
+      document.getElementById("resultStatus").textContent    = data.ok ? data.status : "failed";
+      document.getElementById("resultTelemetry").innerHTML   = mode + " / " + src + envHtml;
+      document.getElementById("resultIncident").textContent  = data.incident_id || "-";
+      document.getElementById("resultBudget").textContent    = data.billing ? money(data.billing.estimated_cost_inr) : "-";
+      document.getElementById("resultCause").textContent     = data.root_cause || "No root cause returned.";
+      
+      // Update action cards
+      const container = document.getElementById("actionCardsContainer");
+      container.innerHTML = "";
+      const planned = data.mitigation && Array.isArray(data.mitigation.actions) ? data.mitigation.actions : [];
+      planned.forEach(item => {{
+        const card = document.createElement("article");
+        card.className = "action-card";
+        card.innerHTML = `
+          <span>${{item.sequence || ""}}</span>
+          <div>
+            <strong>${{formatActionLabel(item.action || "")}}</strong>
+            <p>${{item.reason || "Safe simulated mitigation."}}</p>
+            <small>${{item.target || ""}} · ${{item.status || ""}}</small>
+          </div>
+        `;
+        container.appendChild(card);
+      }});
+
+      // Update evidence and controls
+      document.getElementById("telemetrySource").textContent = src;
+      document.getElementById("fallbackNote").textContent = (data.telemetry && data.telemetry.fallback_note) || "Live telemetry succeeded or no fallback note was needed.";
+      document.getElementById("totalTokens").textContent = data.billing ? data.billing.total_tokens : "-";
+
+      // Update artifacts list
+      const artList = document.getElementById("artifactsList");
+      artList.innerHTML = `
+        <li><strong>Post-mortem</strong><span>${{data.post_mortem_path || ""}}</span></li>
+        <li><strong>Runbook</strong><span>${{data.runbook_path || ""}}</span></li>
+        <li><strong>Agent trace</strong><span>${{data.trace_path || ""}}</span></li>
+      `;
+
+      // Update previews
+      const previews = data.artifact_previews || {{}};
+      document.getElementById("postMortemPreview").textContent = previews.post_mortem || "Post-mortem preview unavailable.";
+      document.getElementById("runbookPreview").textContent    = previews.runbook || "Runbook preview unavailable.";
+
+      // Update raw JSON
+      document.getElementById("rawJson").textContent = JSON.stringify(data, null, 2);
+    }}
+
+    document.getElementById("dtTestBtn").addEventListener("click", async () => {{
+      const url   = document.getElementById("dtUrl").value.trim();
+      const token = document.getElementById("dtToken").value.trim();
+      if (!url || !token) {{ setDtStatus("err", "Enter both URL and token first"); return; }}
+      setDtStatus("checking", "Connecting…");
+      dtScopeList.className = "dt-scopes hidden";
+      runBtn.classList.add("hidden");
+      try {{
+        const res  = await fetch("/dynatrace/test", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify({{ dt_url: url, dt_token: token }}),
+        }});
+        const data = await res.json();
+        if (data.ok) {{
+          dtConnected = true;
+          dtEnv = {{ url, token }};
+          const env = data.environment_host || new URL(url).hostname;
+          setDtStatus("ok", `Connected · ${{env}}`);
+          
+          localStorage.setItem("dt_url", url);
+          localStorage.setItem("dt_token", token);
+
+          const tags = [
+            `<span class="dt-scope-tag">✓ Authenticated</span>`,
+            data.has_openpipeline
+              ? `<span class="dt-scope-tag">✓ OpenPipeline ready</span>`
+              : `<span class="dt-scope-tag missing">✗ openpipeline:events:ingest missing</span>`,
+          ];
+          dtScopeList.innerHTML = tags.join("");
+          dtScopeList.className = "dt-scopes";
+          runBtn.classList.remove("hidden");
+        }} else {{
+          dtConnected = false;
+          setDtStatus("err", data.error || "Connection failed");
+        }}
+      }} catch (e) {{
+        dtConnected = false;
+        setDtStatus("err", "Network error: " + e.message);
+      }}
+    }});
+
+    // Clear connection if URL/token edited
+    ["dtUrl", "dtToken"].forEach(id => {{
+      document.getElementById(id).addEventListener("input", () => {{
+        if (dtConnected) {{
+          dtConnected = false;
+          dtEnv = {{ url: "", token: "" }};
+          setDtStatus("idle", "Enter your environment URL and token");
+          dtScopeList.className = "dt-scopes hidden";
+          runBtn.classList.add("hidden");
+          localStorage.removeItem("dt_url");
+          localStorage.removeItem("dt_token");
+        }}
+      }});
+    }});
+
+    runBtn.addEventListener("click", async () => {{
+      if (!dtConnected) return;
+      setDtStatus("checking", "Running scenario with YOUR Dynatrace...");
+      try {{
+        const body = {{ ...samplePayload, dt_url: dtEnv.url, dt_token: dtEnv.token }};
+        const response = await fetch("/alert", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          body: JSON.stringify(body),
+        }});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Request failed");
+        renderResult(data);
+        const env = dtEnv.url ? new URL(dtEnv.url).hostname : "";
+        setDtStatus("ok", `Success! Events pushed to Dynatrace · ${{env}}`);
+      }} catch (e) {{
+        setDtStatus("err", "Execution failed: " + e.message);
+      }}
+    }});
+
+    // Load from localStorage on startup
+    window.addEventListener("DOMContentLoaded", () => {{
+      const savedUrl = localStorage.getItem("dt_url");
+      const savedToken = localStorage.getItem("dt_token");
+      if (savedUrl && savedToken) {{
+        document.getElementById("dtUrl").value = savedUrl;
+        document.getElementById("dtToken").value = savedToken;
+        document.getElementById("dtTestBtn").click();
+      }}
+    }});
+  </script>
 </body>
 </html>"""
 
@@ -1075,6 +1561,7 @@ async def ingest_alert(payload: AlertPayload) -> dict[str, Any]:
             "source": result.telemetry_source,
             "live_attempted": result.telemetry_mode != "mock" or result.telemetry_error != "live integrations disabled",
             "fallback_note": result.telemetry_error,
+            "environment_url": result.telemetry_environment_url,
         },
         "post_mortem_path": result.post_mortem_path,
         "runbook_path": result.runbook_path,

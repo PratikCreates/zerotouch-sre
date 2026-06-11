@@ -1,0 +1,225 @@
+# LLM documentation for www.dynatrace.com
+
+> Dynatrace is advancing observability for today's digital businesses, helping to transform the complexity of modern digital ecosystems into powerful business assets. By leveraging AI-powered insights, Dynatrace enables organizations to analyze, automate, and innovate faster to drive their business forward.
+
+## Home
+- [Dynatrace homepage](https://www.dynatrace.com/)
+
+## Platform
+### Overview
+> See how our AI-powered observability platform transforms complexity into your greatest asset.
+
+  - [Platform overview](https://www.dynatrace.com/platform/)
+  - [Dashboards](https://www.dynatrace.com/platform/dashboards/)
+  - [Notebooks](https://www.dynatrace.com/platform/notebooks/)
+  - [Alerting](https://www.dynatrace.com/platform/alerting/)
+  - [Workflows](https://www.dynatrace.com/platform/workflows/)
+  - [MCP server](https://www.dynatrace.com/platform/mcp-server/)
+
+### Dynatrace Solution Areas
+- [Infrastructure Observability](https://www.dynatrace.com/platform/infrastructure-observability/)
+- [Application Observability](https://www.dynatrace.com/platform/application-observability/)
+- [AI Observability](https://www.dynatrace.com/solutions/ai-observability/)
+- [Digital Experience](https://www.dynatrace.com/platform/digital-experience/)
+- [Log Analytics](https://www.dynatrace.com/platform/log-management-analytics/)
+- [Application Security](https://www.dynatrace.com/platform/application-security/)
+- [Threat Observability](https://www.dynatrace.com/platform/threat-observability/)
+- [Software Delivery](https://www.dynatrace.com/platform/software-delivery/)
+- [Business Observability](https://www.dynatrace.com/platform/business-observability/)
+
+### Dynatrace Core Technologies
+- [Dynatrace Intelligence](https://www.dynatrace.com/platform/artificial-intelligence/): Precise answers, intelligent automation, and AI recommendations.
+- [AutomationEngine](https://www.dynatrace.com/platform/automationengine/): Extensible and flexible answer-driven automation.
+- [AppEngine](https://www.dynatrace.com/platform/appengine/): Easily create custom, compliant, data-driven apps.
+- [Grail](https://www.dynatrace.com/platform/grail/): Store, unify, and contextually analyze all observability, security, and business data.
+- [Smartscape](https://www.dynatrace.com/platform/application-topology-discovery/smartscape/): Automatic, real-time topology mapping with context.
+- [OpenPipeline](https://www.dynatrace.com/platform/openpipeline/): Ingest, process, enrich, contextualize, and persist data from any source at scale.
+- [OneAgent](https://www.dynatrace.com/platform/oneagent/): Continuous, automatic discovery & observability across your full stack.
+- [PurePath](https://www.dynatrace.com/platform/purepath/): Distributed tracing and code-level analysis technology.
+
+### Dynatrace Apps, Extensions, and Customization
+> Explore the Dynatrace Hub to see how we’re open, extensible, and easily integrate with all major cloud platforms and solutions.
+
+- [Explore the Dynatrace Hub](https://www.dynatrace.com/hub/)
+- [Cloud Platforms](https://www.dynatrace.com/platform/cloud-monitoring/)
+- [Open Ecosystems](https://www.dynatrace.com/platform/open-ecosystem/)
+- [Build your own Dynatrace App](https://developer.dynatrace.com/)
+- [Custom Solutions](https://www.dynatrace.com/solutions/custom-solutions/)
+
+## Solutions
+### Overview
+> Learn how Dynatrace enables teams to analyze, automate, and innovate faster.
+
+  - [Our partners](https://www.dynatrace.com/partners/)
+  - [Customer stories](https://www.dynatrace.com/customers/)
+  - [Dynatrace for Executives](https://www.dynatrace.com/company/dynatrace-for-executives/)
+
+### Use cases
+- [AIOps](https://www.dynatrace.com/platform/aiops/)
+- [AI Observability](https://www.dynatrace.com/solutions/ai-observability/)
+- [Runtime Vulnerability Analytics](https://www.dynatrace.com/solutions/runtime-vulnerability-analytics/)
+- [BizDevOps](https://www.dynatrace.com/solutions/bizdevops/)
+- [Cloud Migration](https://www.dynatrace.com/solutions/cloud-migration/)
+- [Cloud Monitoring](https://www.dynatrace.com/platform/cloud-monitoring/)
+- [Compliance Automation](https://www.dynatrace.com/platform/compliance-automation/)
+- [Database Monitoring](https://www.dynatrace.com/platform/database-monitoring/)
+- [DevOps](https://www.dynatrace.com/solutions/devops/)
+- [DevSecOps](https://www.dynatrace.com/solutions/devsecops/)
+- [Digital Experience Monitoring](https://www.dynatrace.com/platform/digital-experience/)
+- [Distributed Tracing](https://www.dynatrace.com/solutions/distributed-tracing/)
+- [Full Stack Observability](https://www.dynatrace.com/solutions/full-stack-observability/)
+- [Kubernetes Security](https://www.dynatrace.com/solutions/kubernetes-security/)
+- [Log Management and Analytics](https://www.dynatrace.com/platform/log-management-analytics/)
+- [Observability for Developers](https://www.dynatrace.com/solutions/observability-for-developers/)
+- [Platform Engineering](https://www.dynatrace.com/solutions/platform-engineering/)
+- [Security Posture Management](https://www.dynatrace.com/solutions/security-posture-management/)
+- [Site Reliability Engineering](https://www.dynatrace.com/solutions/site-reliability-engineering/)
+- [Tool consolidation](https://www.dynatrace.com/solutions/tool-consolidation/)
+- [Network Monitoring](https://www.dynatrace.com/platform/network-monitoring/)
+
+### Technology
+- [AWS Monitoring](https://www.dynatrace.com/technologies/aws-monitoring/)
+- [Azure Monitoring](https://www.dynatrace.com/technologies/azure-monitoring/)
+- [Google Cloud Monitoring](https://www.dynatrace.com/technologies/google-cloud-monitoring/)
+- [Kubernetes Monitoring](https://www.dynatrace.com/technologies/kubernetes-monitoring/)
+- [Red Hat Monitoring](https://www.dynatrace.com/technologies/redhat-monitoring/)
+- [SAP Monitoring](https://www.dynatrace.com/technologies/sap-monitoring/)
+- [ServiceNow Monitoring](https://www.dynatrace.com/technologies/servicenow/)
+- [VMware Tanzu Monitoring](https://www.dynatrace.com/technologies/vmware-tanzu-monitoring/)
+- [OpenTelemetry](https://www.dynatrace.com/technologies/opentelemetry/)
+
+### Industry
+- [Financial Services](https://www.dynatrace.com/solutions/industry/financial-services/)
+- [Retail and E-commerce](https://www.dynatrace.com/solutions/industry/retail-ecommerce/)
+- [Public Sector](https://www.dynatrace.com/solutions/industry/public-sector/)
+- [Software and Digital](https://www.dynatrace.com/solutions/industry/software-digital/)
+- [Education](https://www.dynatrace.com/solutions/industry/education/)
+
+## Resources
+### Overview
+> See how we empower customer success, and explore our latest eBooks, white papers, blogs, and more.
+
+  - [Resource Center](https://www.dynatrace.com/resources/)
+  - [Support Center](https://support.dynatrace.com/)
+  - [Trust Center](https://www.dynatrace.com/company/trust-center/)
+  - [Request demo](https://www.dynatrace.com/request-demo/)
+  - [Upgrade from Managed to SaaS](https://www.dynatrace.com/platform/saas-upgrade/)
+
+### Learn The latest
+- [Blog](https://www.dynatrace.com/news/blog/)
+- [Customer stories](https://www.dynatrace.com/customers/)
+- [Podcasts](https://www.dynatrace.com/news/pureperformance/)
+- [Webinars](https://www.dynatrace.com/resources/?useCase=&technology=&type=11076839&p=1&sort=dateDesc)
+- [Product news](https://www.dynatrace.com/news/product-news/)
+- [Release notes](https://docs.dynatrace.com/docs/whats-new)
+
+### Adopt and Grow
+- [Training & Certifications](https://www.dynatrace.com/service-support/education-services/): Maximize your potential with role-focused Dynatrace training and certification solutions.
+- [Success & Support](https://www.dynatrace.com/services-support/dynatrace-one/): Continuous, proactive support to accelerate your transformation.
+- [Business Insights](https://www.dynatrace.com/services-support/business-insights/): Advanced analytics and performance optimization.
+- [ACE Services](https://www.dynatrace.com/services-support/ace-services/): Hands-on partnership to drive adoption, automation, and success.
+- [Dynatrace Developer](https://developer.dynatrace.com/): From beginner to experienced, find everything you need to develop Dynatrace® Apps.
+- [Partners](https://www.dynatrace.com/partners/): Bringing together industry experts, thought leaders, and hands-on practitioners to create a world class partner network.
+
+### Dive deeper
+- [Documentation](https://docs.dynatrace.com/docs): Learn all you need to know about Dynatrace—getting started, how to deploy, monitor and much more.
+- [Our community](https://community.dynatrace.com/): Dynatrace Community, the biggest and the best place for discussion about AI-powered observability!
+- [Dynatrace Hub](https://www.dynatrace.com/hub/): All the supported technologies, integrations, and extensions from Dynatrace and our trusted partners.
+
+## Company
+### Overview
+> Learn about our mission to advance observability for today’s digital businesses.
+
+  - [Company overview](https://www.dynatrace.com/company/)
+  - [Press releases](https://www.dynatrace.com/news/press-release/?language=en)
+  - [Blog](https://www.dynatrace.com/news/blog/)
+  - [Customer stories](https://www.dynatrace.com/customers/)
+  - [Our partners](https://www.dynatrace.com/partners/)
+
+### Get to know us
+> Meet our team, and catch up with our news and announcements.
+
+- [Leadership](https://www.dynatrace.com/company/leadership/)
+- [Investor relations](https://ir.dynatrace.com/)
+- [News Center](https://www.dynatrace.com/company/news/)
+- [Dynatrace for Executives](https://www.dynatrace.com/company/dynatrace-for-executives/)
+
+### We’re global
+> Explore our commitment to building a more sustainable future worldwide.
+
+- [Our global impact](https://www.dynatrace.com/company/sustainability/)
+- [Locations](https://www.dynatrace.com/company/locations/)
+
+### Connect with us
+- [Events](https://www.dynatrace.com/about/events/)
+- [Careers](https://www.dynatrace.com/careers/)
+- [Contact us](https://www.dynatrace.com/contact/)
+
+## Support
+- [Support Center](https://support.dynatrace.com/)
+- [Upgrade to SaaS](https://www.dynatrace.com/platform/saas-upgrade/)
+- [Documentation](https://docs.dynatrace.com/docs)
+- [Our Community](https://community.dynatrace.com/)
+- [Dynatrace University](https://university.dynatrace.com/account/dashboard)
+- [Create a ticket](https://one.dynatrace.com/hc/en-us)
+- [Contact us](https://www.dynatrace.com/contact/)
+
+## Utility links
+- [Pricing](https://www.dynatrace.com/pricing/)
+- [Login](https://sso.dynatrace.com/)
+- [Search](https://search.dynatrace.com)
+- [Try it free](https://www.dynatrace.com/try-free/)
+
+## Analyst reports
+- [The Forrester Wave™: AIOps Platforms, Q2 2025](https://www.dynatrace.com/news/analyst-reports/dynatrace-named-a-leader-in-aiops/)
+- [2025 GigaOm Radar for Application Performance Management](https://www.dynatrace.com/news/analyst-reports/2025-gigaom-radar-for-application-performance-management/)
+- [2025 Gartner® Magic Quadrant™ for Digital Experience Monitoring](https://www.dynatrace.com/news/analyst-reports/2025-gartner-magic-quadrant-for-digital-experience-monitoring/)
+- [2025 Gartner® Magic Quadrant™ for Digital Experience Monitoring](https://www.dynatrace.com/news/analyst-reports/2025-gartner-magic-quadrant-for-digital-experience-monitoring/)
+- [2025 ISG Provider Lens™ Multi Public Cloud Solutions Report](https://www.dynatrace.com/news/analyst-reports/2023-isg-provider-lens-multi-public-cloud-solutions-report/)
+- [2025 Gartner® Peer Insights™ Voice of the Customer for Observability Platforms](https://www.dynatrace.com/news/analyst-reports/2024-gartner-peer-insights-voice-of-the-customer-for-observability-platforms/)
+- [2025 GigaOm Radar Report for Kubernetes Observability](https://www.dynatrace.com/news/analyst-reports/dynatrace-named-a-leader-in-the-2025-gigaom-radar-report-for-kubernetes-observability/)
+- [2025 Gartner® Magic Quadrant™ for Observability Platforms](https://www.dynatrace.com/news/analyst-reports/2025-gartner-magic-quadrant-for-observability-platforms/)
+- [2025 Gartner® Critical Capabilities for Observability Platforms](https://www.dynatrace.com/news/analyst-reports/2025-gartner-critical-capabilities-for-observability-platforms/)
+
+## Documentation and Support
+- [Dynatrace Engineering](https://www.dynatrace.com/engineering/)
+- [Dynatrace Developer](https://developer.dynatrace.com/)
+- [Dynatrace Community](https://community.dynatrace.com/)
+- [Dynatrace University](https://university.dynatrace.com/)
+
+## Others
+- [Dynatrace Careers](https://www.dynatrace.com/careers/)
+- [Dynatrace Investor Relations](https://ir.dynatrace.com/)
+- [Dynatrace Newsroom](https://www.dynatrace.com/company/newsroom/)
+- [Dynatrace Blog](https://www.dynatrace.com/news/blog/)
+- [Dynatrace Resources](https://www.dynatrace.com/resources/)
+- [Is It Observable?](https://isitobservable.io/)
+- [Knowledge Base](https://www.dynatrace.com/knowledge-base/)
+- [Dynatrace Glossary](https://www.dynatrace.com/glossary/)
+
+## Blog posts
+
+- [Sky-high developer productivity with Dynatrace MCP and GitHub Copilot](https://www.dynatrace.com/news/blog/sky-high-developer-productivity-with-dynatrace-mcp-and-github-copilot/)
+- [The State of Observability 2025: Business impact, key trends, and a 90-day plan for decision-makers](https://www.dynatrace.com/news/blog/ai-observability-business-impact-2025/)
+- [Dynatrace 3rd-generation platform: Built for the world of Autonomous Intelligence](https://www.dynatrace.com/news/blog/dynatrace-3rd-gen-platform/)
+- [Maximizing cloud efficiency: Driving cost optimization and sustainability with Dynatrace](https://www.dynatrace.com/news/blog/optimize-cloud-cost-cloud-sustainability-with-dynatrace/)
+- [Latest OpenPipeline upgrades simplify high-volume, real-time data processing](https://www.dynatrace.com/news/blog/latest-openpipeline-upgrades-simplify-high-volume-real-time-data-processing/)
+- [Snyk integration for Dynatrace: Bridging development and runtime with actionable security notifications](https://www.dynatrace.com/news/blog/snyk-dynatrace-integration-actionable-notifications/)
+- [What is OpenTelemetry](https://www.dynatrace.com/news/blog/what-is-opentelemetry/)
+- [What's new in Dynatrace SaaS version 1\.317](https://www.dynatrace.com/news/blog/whats-new-in-dynatrace-saas-version-1-317/)
+- [The latest Dynatrace AI\-powered observability features are now on Google Cloud](https://www.dynatrace.com/news/blog/dynatrace-ai-powered-observability-now-on-google-cloud/)
+- [Advancing AIOps: Preventive operations powered by Davis AI](https://www.dynatrace.com/news/blog/advancing-aiops-preventive-operations-powered-by-davis-ai/)
+- [Maximizing cloud efficiency: Driving cost optimization and sustainability with Dynatrace](https://www.dynatrace.com/news/blog/optimize-cloud-cost-cloud-sustainability-with-dynatrace/)
+
+## Press releases
+- [Dynatrace broadens cloud application security coverage for Kubernetes and Node\.js](https://www.dynatrace.com/news/press-release/dynatrace-broadens-cloud-application-security-coverage-for-kubernetes-and-node-js/)
+- [Dynatrace Intelligence Redefines Observability with Trusted Agentic Automation](https://www.dynatrace.com/news/press-release/dynatrace-intelligence-redefines-observability/)
+- [Dynatrace Recognized as a Customers’ Choice in the 2025 Gartner® Peer Insights™ Voice of the Customer for Observability Platforms Report](https://www.dynatrace.com/news/press-release/2025-gartner-peer-insights-voc-observability-platforms/)
+- [Dynatrace Named a Leader in 2025 ISG Provider Lens® Multi Public Cloud Solutions Report for Cloud\-Native Observability and Security](https://www.dynatrace.com/news/press-release/2025-isg-provider-lens-multi-public-cloud-solutions/)
+- [Dynatrace Recognized as a Customers’ Choice in the 2025 Gartner® Peer Insights™ Voice of the Customer for Observability Platforms Report](https://www.dynatrace.com/news/press-release/2025-gartner-peer-insights-voc-observability-platforms/)
+- [New global report finds enterprises hitting Agentic AI inflection point](https://www.dynatrace.com/news/press-release/pulse-of-agentic-ai-2026/)
+- [Dynatrace Announces New Cloud Operations Solution for Microsoft Azure](https://www.dynatrace.com/news/press-release/new-cloud-operations-solution-azure/)
+- [Dynatrace and Microsoft Partner to Scale Enterprise Customer AI Initiatives](https://www.dynatrace.com/news/press-release/dynatrace-microsoft-partner-ai/)
+- [Dynatrace Integrates with Amazon Bedrock AgentCore to Deliver End-to-End Observability for Agentic AI on AWS](https://www.dynatrace.com/news/press-release/dynatrace-amazon-bedrock-agentcore-aws/)
+- [Dynatrace Powers the Future of Agentic AI](https://www.dynatrace.com/news/press-release/dynatrace-powers-future-of-agentic-ai/)
+- [Dynatrace Recognized as a Customers’ Choice in the 2025 Gartner® Peer Insights ™ Voice of the Customer for Digital Experience Monitoring](https://www.dynatrace.com/news/press-release/2025-gartner-peer-insights-voice-of-customer-dem/)
